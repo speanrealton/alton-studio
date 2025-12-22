@@ -75,6 +75,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // Updates the status of a printer application (approve/reject)
   const updatePrinterStatus = async (printerId: string, newStatus: string) => {
     setProcessing(true);
     const { error } = await supabase
