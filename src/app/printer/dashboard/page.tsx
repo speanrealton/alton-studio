@@ -21,25 +21,25 @@ export default function PrinterDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef(null);
 
-  const [quoteRequests, setQuoteRequests] = useState([]);
+  const [quoteRequests, setQuoteRequests] = useState<any[]>([]);
   const [selectedQuote, setSelectedQuote] = useState(null);
-  const [quoteMessages, setQuoteMessages] = useState([]);
+  const [quoteMessages, setQuoteMessages] = useState<any[]>([]);
   const [newQuoteMessage, setNewQuoteMessage] = useState('');
   const [quoteResponse, setQuoteResponse] = useState({ price: '', notes: '', delivery_time: '' });
   const [quoteFilter, setQuoteFilter] = useState('all');
 
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [orderFilter, setOrderFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const [portfolioImages, setPortfolioImages] = useState([]);
+  const [portfolioImages, setPortfolioImages] = useState<any[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioUpload, setPortfolioUpload] = useState({ title: '', description: '', image: null });
   const [selectedPortfolioImage, setSelectedPortfolioImage] = useState(null);
@@ -55,7 +55,7 @@ export default function PrinterDashboard() {
     conversionRate: 0
   });
 
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {

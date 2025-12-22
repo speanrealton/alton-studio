@@ -19,17 +19,17 @@ const categories = [
 export default function GeoLocationSearch() {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [printers, setPrinters] = useState([]);
-  const [rankedPrinters, setRankedPrinters] = useState([]);
+  const [printers, setPrinters] = useState<any[]>([]);
+  const [rankedPrinters, setRankedPrinters] = useState<any[]>([]);
   const [radius, setRadius] = useState(50); // km
   const [searching, setSearching] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
   const [minRating, setMinRating] = useState(0);
   const [maxPrice, setMaxPrice] = useState(1000);
   const [sortBy, setSortBy] = useState('distance'); // distance, rating, price
   const [showFilters, setShowFilters] = useState(false);
   const [addressInput, setAddressInput] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const getCurrentLocation = () => {

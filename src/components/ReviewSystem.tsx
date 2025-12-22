@@ -7,13 +7,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ReviewSystem({ printerId }) {
   const [user, setUser] = useState(null);
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [stats, setStats] = useState({ average: 0, total: 0, distribution: {} });
 

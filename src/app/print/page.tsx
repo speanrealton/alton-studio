@@ -28,7 +28,7 @@ const categories = [
 ];
 
 export default function PrintNetwork() {
-  const [printers, setPrinters] = useState([]);
+  const [printers, setPrinters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -38,14 +38,14 @@ export default function PrintNetwork() {
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPrinter, setSelectedPrinter] = useState(null);
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState<any[]>([]);
   const [user, setUser] = useState(null);
-  const [countries, setCountries] = useState([]);
+  const [countries, setCountries] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, countries: 0, prints: 0 });
   const [quoteForm, setQuoteForm] = useState({ show: false, printerId: null });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showQuotesModal, setShowQuotesModal] = useState(false);
-  const [quoteConversations, setQuoteConversations] = useState([]);
+  const [quoteConversations, setQuoteConversations] = useState<any[]>([]);
   const [selectedQuoteConv, setSelectedQuoteConv] = useState(null);
   const [quoteMessages, setQuoteMessages] = useState([]);
   const [newQuoteMessage, setNewQuoteMessage] = useState('');

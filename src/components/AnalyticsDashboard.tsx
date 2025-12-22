@@ -16,8 +16,8 @@ export default function AnalyticsDashboard({ printerId }) {
     revenue: { total: 0, trend: 0 },
     engagement: { messages: 0, favorites: 0 }
   });
-  const [viewsChart, setViewsChart] = useState([]);
-  const [quotesChart, setQuotesChart] = useState([]);
+  const [viewsChart, setViewsChart] = useState<any[]>([]);
+  const [quotesChart, setQuotesChart] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAnalytics();

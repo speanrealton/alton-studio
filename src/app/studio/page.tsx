@@ -89,7 +89,7 @@ export default function StudioPage() {
   const historyIndexRef = useRef<number>(-1);
   
   // State declarations MUST come before useEffects that reference them
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<any[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   
   const [pages, setPages] = useState<Array<{ id: number; canvas: fabric.Canvas | null; name: string; data: unknown }>>([{ id: 1, canvas: null, name: 'Page 1', data: null }]);
@@ -117,7 +117,7 @@ export default function StudioPage() {
   const [showSaveNotif, setShowSaveNotif] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedSize, setSelectedSize] = useState('A4 Portrait');
   const [customWidth, setCustomWidth] = useState(800);
