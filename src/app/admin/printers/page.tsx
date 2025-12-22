@@ -75,25 +75,25 @@ export default function AdminDashboard() {
     }
   };
 
-  // Updates the status of a printer application (approve/reject)
-  const updatePrinterStatus = async (printerId: string, newStatus: string) => {
+  const updatePrinterStatus = async (printerId: string, newStatus: string): Promise<void> => {
     setProcessing(true);
-    const { error } = await supabase
-      .from('printers')
-      .update({ status: newStatus })
-      .eq('id', printerId);
+    try {
+      const { error } = await supabase
+        .from('printers')
+        .update({ status: newStatus })
+        .eq('id', printerId);
 
-    if (!error) {
-      setSelectedPrinter(null);
-      fetchPrinters();
-      fetchStats();
-      
-      // TODO: Send email notification to printer
-      alert(`Printer ${newStatus === 'approved' ? 'approved' : 'rejected'} successfully!`);
-    } else {
-      alert('Error updating status: ' + error.message);
+      if (!error) {
+        setSelectedPrinter(null);
+        await fetchPrinters();
+        await fetchStats();
+        alert(`Printer ${newStatus === 'approved' ? 'approved' : 'rejected'} successfully!`);
+      } else {
+        alert('Error updating status: ' + error.message);
+      }
+    } finally {
+      setProcessing(false);
     }
-    setProcessing(false);
   };
 
   return (
