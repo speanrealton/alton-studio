@@ -1,0 +1,15 @@
+{
+  "id": "presentation-slide-1",
+  "name": "Presentation Title Slide",
+  "category": "Presentations",
+  "thumbnail": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=450&fit=crop",
+  "size": { "width": 1920, "height": 1080 },
+  "data": {
+    "shapes": [
+      { "type": "geo", "x": 0, "y": 0, "props": { "geo": "rectangle", "w": 1920, "h": 1080, "color": "grey", "fill": "solid" } },
+      { "type": "geo", "x": 0, "y": 0, "props": { "geo": "rectangle", "w": 960, "h": 1080, "color": "blue", "fill": "solid" } },
+      { "type": "note", "x": 1060, "y": 400, "props": { "text": "Presentation Title", "size": "xl" } },
+      { "type": "note", "x": 1060, "y": 600, "props": { "text": "Subtitle or tagline", "size": "l" } }
+    ]
+  }
+}

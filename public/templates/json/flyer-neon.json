@@ -1,0 +1,45 @@
+{
+	"id": "flyer-neon",
+	"name": "Flyer Neon",
+	"category": "Flyer",
+	"thumbnail": "/image14.jpg",
+	"size": { "width": 1200, "height": 1800 },
+	"data": {
+		"width": 1200,
+		"height": 1800,
+		"background": "#0f172a",
+		"layers": [
+			{
+				"id": "title",
+				"type": "text",
+				"content": "Neon Night",
+				"x": 120,
+				"y": 220,
+				"fontSize": 112,
+				"fontFamily": "Poppins",
+				"fontWeight": "700",
+				"color": "#ff66cc"
+			},
+			{
+				"id": "subtitle",
+				"type": "text",
+				"content": "Live DJ • Saturday",
+				"x": 120,
+				"y": 360,
+				"fontSize": 36,
+				"fontFamily": "Poppins",
+				"color": "#cbd5e1"
+			},
+			{
+				"id": "accent",
+				"type": "shape",
+				"shape": "rectangle",
+				"x": 100,
+				"y": 420,
+				"width": 1000,
+				"height": 8,
+				"fill": "#ff66cc"
+			}
+		]
+	}
+}

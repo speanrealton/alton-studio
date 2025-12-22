@@ -1,0 +1,48 @@
+[
+  {
+    "intent": "Greeting",
+    "triggers": ["hello","hi","hey","greetings"],
+    "answer": "Hello! I'm Alton Core, your on-site assistant. I can help with navigation, quotes, printer selection, uploads, and account issues. How can I help you today?"
+  },
+  {
+    "intent": "How to request a quote",
+    "triggers": ["request quote","get a quote","how to quote","quote process"],
+    "answer": "To request a quote: 1) Open the 'Printers' page; 2) Choose a verified printer; 3) Click 'Request Quote' and provide your specifications (material, quantity, turnaround). You'll receive bids from partners and can accept one to proceed."
+  },
+  {
+    "intent": "Account and security",
+    "triggers": ["account","login","security","password","sign in","sign up"],
+    "answer": "For account issues, go to the 'Login' page. We recommend using a strong password and enabling two-factor authentication when available. For lost passwords use 'Reset Password' on the login form."
+  },
+  {
+    "intent": "Become a printer",
+    "triggers": ["become a printer","join as printer","partner","apply as printer"],
+    "answer": "To join as a verified printer, visit the 'Printers' -> 'Apply' section and submit your facility details, calibration records, and fulfillment history. Our team will review and, upon approval, add the 'Verified' badge."
+  },
+  {
+    "intent": "Upload designs",
+    "triggers": ["upload design","upload","studio upload","how to upload"],
+    "answer": "To upload a design, open the 'Studio' or 'Upload' area, select your file (SVG, PNG, PDF recommended), and follow the prompts to set dimensions and print preferences. You can then request a quote or save as a template."
+  }
+  ,
+  {
+    "intent": "Shipping & Delivery",
+    "triggers": ["shipping","delivery","ship","turnaround","lead time"],
+    "answer": "Shipping and delivery times depend on the selected printer and your chosen turnaround option. After accepting a quote, you'll see estimated delivery windows in the order summary. For urgent jobs, choose 'expedited' and contact the printer for confirmation."
+  },
+  {
+    "intent": "Returns & Refunds",
+    "triggers": ["return","refund","quality issue","wrong item","refund policy"],
+    "answer": "If your print doesn't meet the quality standards, open a support request via the 'Orders' page and provide photos. Verified printers must resolve quality disputes; refunds are processed if remediation fails. See the 'Returns' section in our Terms for full policy."
+  },
+  {
+    "intent": "Contact Support",
+    "triggers": ["support","contact","help","customer service","email"],
+    "answer": "You can contact our support team from the 'Help' page or by emailing support@alton.studio. For order-specific issues include your order ID and photos to speed up resolution."
+  },
+  {
+    "intent": "Pricing Policy",
+    "triggers": ["pricing","prices","price policy","how much","costs"],
+    "answer": "Prices are set by partner printers and depend on material, quantity, and turnaround. Use the 'Request Quote' flow to receive competitive bids. Beware of very low bids — check printer reviews and verification badges."
+  }
+]

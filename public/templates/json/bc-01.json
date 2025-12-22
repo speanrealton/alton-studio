@@ -1,0 +1,55 @@
+{
+  "id": "bc-01",
+  "name": "Minimal White",
+  "category": "Business Card",
+  "thumbnail": "/image1.jpg",
+  "size": { "width": 1050, "height": 600 },
+  "data": {
+    "width": 1050,
+    "height": 600,
+    "background": "#ffffff",
+    "layers": [
+      {
+        "id": "name",
+        "type": "text",
+        "content": "John Doe",
+        "x": 80,
+        "y": 180,
+        "fontSize": 56,
+        "fontFamily": "Poppins",
+        "fontWeight": "600",
+        "color": "#111111"
+      },
+      {
+        "id": "role",
+        "type": "text",
+        "content": "Business Consultant",
+        "x": 80,
+        "y": 250,
+        "fontSize": 28,
+        "fontFamily": "Poppins",
+        "color": "#666666"
+      },
+      {
+        "id": "line",
+        "type": "shape",
+        "shape": "rectangle",
+        "x": 80,
+        "y": 300,
+        "width": 120,
+        "height": 6,
+        "fill": "#111111"
+      },
+      {
+        "id": "contact",
+        "type": "text",
+        "content": "+256 700 000000  |  john@email.com",
+        "x": 80,
+        "y": 360,
+        "fontSize": 26,
+        "fontFamily": "Poppins",
+        "color": "#333333"
+      }
+    ]
+  }
+}

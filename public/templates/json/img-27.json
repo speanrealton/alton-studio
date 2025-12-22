@@ -1,0 +1,33 @@
+{
+  "id": "img-27",
+  "name": "EPS Preview",
+  "category": "Imported EPS",
+  "thumbnail": "/image27.jpg",
+  "size": { "width": 800, "height": 800 },
+  "data": {
+    "width": 800,
+    "height": 800,
+    "background": "#ffffff",
+    "layers": [
+      {
+        "id": "bg-image",
+        "type": "image",
+        "src": "/image27.jpg",
+        "x": 0,
+        "y": 0,
+        "width": 800,
+        "height": 800
+      },
+      {
+        "id": "label",
+        "type": "text",
+        "content": "EPS Preview",
+        "x": 24,
+        "y": 24,
+        "fontSize": 24,
+        "fontFamily": "Poppins",
+        "color": "#111111"
+      }
+    ]
+  }
+}

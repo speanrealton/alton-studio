@@ -1,0 +1,42 @@
+{
+  "T-Shirts": [
+    { "name": "ThreadWorks Print Co.", "rating": 4.9, "location": "Los Angeles, CA", "url": "https://threadworks.example" },
+    { "name": "InkWear Studios", "rating": 4.8, "location": "Austin, TX", "url": "https://inkwear.example" },
+    { "name": "Urban Tees Printing", "rating": 4.7, "location": "New York, NY", "url": "https://urbantees.example" }
+  ],
+  "Business Cards": [
+    { "name": "CardCraft Pro", "rating": 4.9, "location": "Chicago, IL", "url": "https://cardcraft.example" },
+    { "name": "Press & Print Co.", "rating": 4.8, "location": "San Francisco, CA", "url": "https://pressprint.example" },
+    { "name": "Elite Business Prints", "rating": 4.7, "location": "Seattle, WA", "url": "https://elitecards.example" }
+  ],
+  "Posters": [
+    { "name": "PosterLab", "rating": 4.9, "location": "Portland, OR", "url": "https://posterlab.example" },
+    { "name": "LargeForm Prints", "rating": 4.8, "location": "Denver, CO", "url": "https://largeform.example" },
+    { "name": "ColorWave Posters", "rating": 4.7, "location": "Miami, FL", "url": "https://colorwave.example" }
+  ],
+  "Canvas": [
+    { "name": "Canvas Atelier", "rating": 4.9, "location": "Los Angeles, CA", "url": "https://canvasatelier.example" },
+    { "name": "FineFrame Prints", "rating": 4.8, "location": "San Diego, CA", "url": "https://fineframe.example" },
+    { "name": "GalleryCanvas", "rating": 4.7, "location": "Chicago, IL", "url": "https://gallerycanvas.example" }
+  ],
+  "Packaging": [
+    { "name": "PackForge", "rating": 4.9, "location": "Oakland, CA", "url": "https://packforge.example" },
+    { "name": "BoxWorks", "rating": 4.8, "location": "Raleigh, NC", "url": "https://boxworks.example" },
+    { "name": "CustomPack Co.", "rating": 4.6, "location": "Houston, TX", "url": "https://custompack.example" }
+  ],
+  "Promotional": [
+    { "name": "PromoPlus", "rating": 4.9, "location": "Atlanta, GA", "url": "https://promoplus.example" },
+    { "name": "Giveaway Goods", "rating": 4.7, "location": "Dallas, TX", "url": "https://giveaway.example" },
+    { "name": "BrandSwag Co.", "rating": 4.6, "location": "San Jose, CA", "url": "https://brandswag.example" }
+  ],
+  "Large Format": [
+    { "name": "BannerHouse", "rating": 4.9, "location": "Phoenix, AZ", "url": "https://bannerhouse.example" },
+    { "name": "WidePrint Solutions", "rating": 4.8, "location": "Las Vegas, NV", "url": "https://wideprint.example" },
+    { "name": "ExpoGraphics", "rating": 4.7, "location": "Orlando, FL", "url": "https://expographics.example" }
+  ],
+  "3D Print": [
+    { "name": "Proto3D Labs", "rating": 4.9, "location": "San Francisco, CA", "url": "https://proto3d.example" },
+    { "name": "LayerWorks 3D", "rating": 4.8, "location": "Boston, MA", "url": "https://layerworks.example" },
+    { "name": "MakerForge", "rating": 4.7, "location": "Detroit, MI", "url": "https://makerforge.example" }
+  ]
+}

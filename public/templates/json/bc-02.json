@@ -1,0 +1,54 @@
+{
+  "id": "bc-02",
+  "name": "Dark Corporate",
+  "category": "Business Card",
+  "thumbnail": "/image2.jpg",
+  "size": { "width": 1050, "height": 600 },
+  "data": {
+    "width": 1050,
+    "height": 600,
+    "background": "#111827",
+    "layers": [
+      {
+        "id": "accent",
+        "type": "shape",
+        "shape": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 70,
+        "height": 600,
+        "fill": "#3B82F6"
+      },
+      {
+        "id": "name",
+        "type": "text",
+        "content": "Sarah Kim",
+        "x": 120,
+        "y": 200,
+        "fontSize": 52,
+        "fontFamily": "Montserrat",
+        "color": "#FFFFFF"
+      },
+      {
+        "id": "role",
+        "type": "text",
+        "content": "Marketing Director",
+        "x": 120,
+        "y": 260,
+        "fontSize": 28,
+        "fontFamily": "Montserrat",
+        "color": "#CBD5E1"
+      },
+      {
+        "id": "contact",
+        "type": "text",
+        "content": "sarah@company.com\n+256 701 000000",
+        "x": 120,
+        "y": 330,
+        "fontSize": 26,
+        "fontFamily": "Montserrat",
+        "color": "#E5E7EB"
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "snapshot": {
+    "assets": {},
+    "schema": 14,
+    "records": [
+      {
+        "id": "shape:bg",
+        "type": "geo",
+        "x": 0,
+        "y": 0,
+        "props": { "geo": "rectangle", "w": 1050, "h": 600, "color": "black", "fill": "solid" }
+      },
+      {
+        "id": "shape:title",
+        "type": "text",
+        "x": 100,
+        "y": 180,
+        "props": { "text": "JOHN DOE", "color": "white", "font": "draw", "size": "xl", "bold": true }
+      },
+      {
+        "id": "shape:subtitle",
+        "type": "text",
+        "x": 100,
+        "y": 280,
+        "props": { "text": "Creative Director", "color": "violet-400", "size": "l" }
+      },
+      {
+        "id": "shape:email",
+        "type": "text",
+        "x": 100,
+        "y": 380,
+        "props": { "text": "john@alton.studio", "color": "gray-400", "size": "m" }
+      },
+      {
+        "id": "shape:accent",
+        "type": "geo",
+        "x": 700,
+        "y": 100,
+        "props": { "geo": "ellipse", "w": 250, "h": 250, "color": "violet-600", "fill": "solid", "opacity": 0.3 }
+      }
+    ]
+  }
+}

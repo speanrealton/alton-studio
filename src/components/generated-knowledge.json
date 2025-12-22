@@ -1,0 +1,716 @@
+[
+  {
+    "intent": "Greeting",
+    "triggers": [
+      "hello",
+      "hi",
+      "hey",
+      "greetings"
+    ],
+    "answer": "Hello! I'm Alton Core, your on-site assistant. I can help with navigation, quotes, printer selection, uploads, and account issues. How can I help you today?"
+  },
+  {
+    "intent": "How to request a quote",
+    "triggers": [
+      "request quote",
+      "get a quote",
+      "how to quote",
+      "quote process"
+    ],
+    "answer": "To request a quote: 1) Open the 'Printers' page; 2) Choose a verified printer; 3) Click 'Request Quote' and provide your specifications (material, quantity, turnaround). You'll receive bids from partners and can accept one to proceed."
+  },
+  {
+    "intent": "Account and security",
+    "triggers": [
+      "account",
+      "login",
+      "security",
+      "password",
+      "sign in",
+      "sign up"
+    ],
+    "answer": "For account issues, go to the 'Login' page. We recommend using a strong password and enabling two-factor authentication when available. For lost passwords use 'Reset Password' on the login form."
+  },
+  {
+    "intent": "Become a printer",
+    "triggers": [
+      "become a printer",
+      "join as printer",
+      "partner",
+      "apply as printer"
+    ],
+    "answer": "To join as a verified printer, visit the 'Printers' -> 'Apply' section and submit your facility details, calibration records, and fulfillment history. Our team will review and, upon approval, add the 'Verified' badge."
+  },
+  {
+    "intent": "Upload designs",
+    "triggers": [
+      "upload design",
+      "upload",
+      "studio upload",
+      "how to upload"
+    ],
+    "answer": "To upload a design, open the 'Studio' or 'Upload' area, select your file (SVG, PNG, PDF recommended), and follow the prompts to set dimensions and print preferences. You can then request a quote or save as a template."
+  },
+  {
+    "intent": "Shipping & Delivery",
+    "triggers": [
+      "shipping",
+      "delivery",
+      "ship",
+      "turnaround",
+      "lead time"
+    ],
+    "answer": "Shipping and delivery times depend on the selected printer and your chosen turnaround option. After accepting a quote, you'll see estimated delivery windows in the order summary. For urgent jobs, choose 'expedited' and contact the printer for confirmation."
+  },
+  {
+    "intent": "Returns & Refunds",
+    "triggers": [
+      "return",
+      "refund",
+      "quality issue",
+      "wrong item",
+      "refund policy"
+    ],
+    "answer": "If your print doesn't meet the quality standards, open a support request via the 'Orders' page and provide photos. Verified printers must resolve quality disputes; refunds are processed if remediation fails. See the 'Returns' section in our Terms for full policy."
+  },
+  {
+    "intent": "Contact Support",
+    "triggers": [
+      "support",
+      "contact",
+      "help",
+      "customer service",
+      "email"
+    ],
+    "answer": "You can contact our support team from the 'Help' page or by emailing support@alton.studio. For order-specific issues include your order ID and photos to speed up resolution."
+  },
+  {
+    "intent": "Pricing Policy",
+    "triggers": [
+      "pricing",
+      "prices",
+      "price policy",
+      "how much",
+      "costs"
+    ],
+    "answer": "Prices are set by partner printers and depend on material, quantity, and turnaround. Use the 'Request Quote' flow to receive competitive bids. Beware of very low bids — check printer reviews and verification badges."
+  },
+  {
+    "intent": "Component: AnalyticsDashboard",
+    "triggers": [
+      "analyticsdashboard"
+    ],
+    "answer": "'use client'; import { useState, useEffect } from 'react'; import { supabase } from '@/lib/supabase'; import { TrendingUp, Eye, MessageCircle, Star, DollarSign, Users, Calendar, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';"
+  },
+  {
+    "intent": "Component: AppSidebar",
+    "triggers": [
+      "appsidebar"
+    ],
+    "answer": "src/components/AppSidebar.tsx 'use client'; import Link from 'next/link'; import { usePathname } from 'next/navigation'; import { Home, Plus, LayoutTemplate, Sparkles, FolderOpen } from 'lucide-react'; const items = [ { icon: Home, label: 'Home', href: '/home' },"
+  },
+  {
+    "intent": "Component: AuthButton",
+    "triggers": [
+      "authbutton"
+    ],
+    "answer": "components/AuthButton.tsx — FIXED VERSION 'use client'; import { useEffect, useState } from 'react'; import { useRouter, usePathname } from 'next/navigation'; import { supabase } from '@/lib/supabase'; import { Button } from '@/components/ui/button';"
+  },
+  {
+    "intent": "Component: AuthModal",
+    "triggers": [
+      "authmodal"
+    ],
+    "answer": "components/AuthModal.tsx — POPUP LOGIN/SIGNUP 'use client'; import { useState } from 'react'; import { supabase } from '@/lib/supabase'; import { X, Loader2, Mail, Lock } from 'lucide-react'; import { motion, AnimatePresence } from 'framer-motion';"
+  },
+  {
+    "intent": "Component: ChatSystem",
+    "triggers": [
+      "chatsystem"
+    ],
+    "answer": "'use client'; import { useState, useEffect, useRef } from 'react'; import { supabase } from '@/lib/supabase'; import { X, Send, Loader2, Sparkles, Bot, ShieldCheck, ArrowRight, Activity, Cpu, Globe, Search, Command, Zap"
+  },
+  {
+    "intent": "Component: GeoLocationSearch",
+    "triggers": [
+      "geolocationsearch"
+    ],
+    "answer": "'use client'; import { useState, useEffect } from 'react'; import { supabase } from '@/lib/supabase'; import { MapPin, Navigation, Loader2, Search, Sliders } from 'lucide-react'; import { motion } from 'framer-motion';"
+  },
+  {
+    "intent": "Component: ProductGrid",
+    "triggers": [
+      "productgrid"
+    ],
+    "answer": "src/components/ProductGrid.tsx import Link from 'next/link'; export default function ProductGrid({ title, products, color }: { title: string; products: any[]; color: string }) { return ( <div className=\"min-h-screen bg-black text-white py-20\"> <div className=\"max-w-7xl mx-auto px-6\">"
+  },
+  {
+    "intent": "Component: ReviewSystem",
+    "triggers": [
+      "reviewsystem"
+    ],
+    "answer": "'use client'; import { useState, useEffect } from 'react'; import { supabase } from '@/lib/supabase'; import { Star, ThumbsUp, User, Check, X, Upload, Loader2 } from 'lucide-react'; import { motion, AnimatePresence } from 'framer-motion';"
+  },
+  {
+    "intent": "Component: Sidebar",
+    "triggers": [
+      "sidebar"
+    ],
+    "answer": "'use client'; import Link from 'next/link'; import { usePathname } from 'next/navigation'; import { Home, Plus, FolderOpen, Sparkles } from 'lucide-react'; const navItems = [ { icon: Home, label: 'Home', href: '/' },"
+  },
+  {
+    "intent": "Component: StripePayment",
+    "triggers": [
+      "stripepayment"
+    ],
+    "answer": "See StripePayment.tsx"
+  },
+  {
+    "intent": "Lib: collaboration",
+    "triggers": [
+      "collaboration"
+    ],
+    "answer": "import { createClient } from '@supabase/supabase-js'; const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''; const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; export const supabase = createClient(supabaseUrl, supabaseAnonKey); // Collaboration types export interface Collaborator { id: string; name: string; color: string; lastSeen: number; }"
+  },
+  {
+    "intent": "Lib: storage",
+    "triggers": [
+      "storage"
+    ],
+    "answer": "// src/lib/storage.ts // Storage utility that works both in Claude.ai and local development interface StorageResult { key: string; value: string; shared: boolean; } class StorageAdapter { private isClaudeEnvironment(): boolean { return typeof window !== 'undefined' && 'storage' in window; }"
+  },
+  {
+    "intent": "Lib: stripe",
+    "triggers": [
+      "stripe"
+    ],
+    "answer": "// src/lib/stripe.ts import Stripe from 'stripe'; export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20', });"
+  },
+  {
+    "intent": "Lib: supabase",
+    "triggers": [
+      "supabase"
+    ],
+    "answer": "// src/lib/supabase.ts import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'; import { Database } from '@/types/supabase'; export const supabase = createBrowserSupabaseClient<Database>();"
+  },
+  {
+    "intent": "Lib: utils",
+    "triggers": [
+      "utils"
+    ],
+    "answer": "import { clsx, type ClassValue } from \"clsx\" import { twMerge } from \"tailwind-merge\" export function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)) }"
+  },
+  {
+    "intent": "COPY PASTE TEMPLATES",
+    "triggers": [
+      "copy",
+      "paste",
+      "templates"
+    ],
+    "answer": "# 📋 Copy-Paste Code Templates - Add 8 Styles to Each Generator This file contains ready-to-copy code for adding 8 styles to each of your 9 remaining generators. ## Quick Start For each generator: 1. Find `getRandomStyle()` function → Change `* 4` to `* 8`"
+  },
+  {
+    "intent": "DESIGN GENERATOR GUIDE",
+    "triggers": [
+      "design",
+      "generator",
+      "guide"
+    ],
+    "answer": "# 🎨 Professional Design Generator - Usage Guide ## Quick Start ### 1. Navigate to the Design Generator ``` Visit: http://localhost:3000/professional-design ```"
+  },
+  {
+    "intent": "DESIGN STUDIO UPDATES",
+    "triggers": [
+      "design",
+      "studio",
+      "updates"
+    ],
+    "answer": "# Design Studio - Major Updates ## 🎨 New Features Implemented ### 1. **Dynamic Form Fields Based on Design Type** The form now intelligently adapts based on the selected design template: #### **Business Card** 💼"
+  },
+  {
+    "intent": "DESIGN SYSTEM IMPROVEMENTS",
+    "triggers": [
+      "design",
+      "system",
+      "improvements"
+    ],
+    "answer": "# Professional Design System - Enhancement Summary ## 🎨 What's Been Improved ### 1. **UI File Completely Fixed** - ✅ Removed all duplicate function definitions (`handleGenerate`, `handleDownload`) - ✅ Removed references to undefined `COLORS` constant and `colorSet` state - ✅ Replaced preset color scheme with modern **custom hex color picker**"
+  },
+  {
+    "intent": "IMPLEMENTATION COMPLETE",
+    "triggers": [
+      "implementation",
+      "complete"
+    ],
+    "answer": "# 🎉 Complete Implementation Summary - 1M+ Unique Designs System ## ✅ What Has Been Completed ### 1. Business Card Generator Enhanced ✅ - **Status**: Fully updated to 8 styles - **Styles**: 0-7 (doubled from original 4) - **New Styles Added**:"
+  },
+  {
+    "intent": "PHASE 1 CHECKLIST",
+    "triggers": [
+      "phase",
+      "1",
+      "checklist"
+    ],
+    "answer": "# ✅ Implementation Checklist - Add Templates to Scale to 1M+ Designs ## Project Overview - **Goal**: Scale from 40 unique designs to 1M+ unique designs - **Current Status**: Phase 1, 10% complete (1/10 generators done) - **Time Estimate**: 1-2 hours to complete Phase 1 - **Success Metric**: All 10 generators support 8 styles each"
+  },
+  {
+    "intent": "PROFESSIONAL DESIGN GUIDE",
+    "triggers": [
+      "professional",
+      "design",
+      "guide"
+    ],
+    "answer": "# Professional Design System - Implementation Guide ## Overview Your Alton Studio now has an integrated professional design generation system powered by Supabase + Replicate AI. ## Features ### 1. **Design Categories**"
+  },
+  {
+    "intent": "PROFESSIONAL DESIGN TROUBLESHOOTING",
+    "triggers": [
+      "professional",
+      "design",
+      "troubleshooting"
+    ],
+    "answer": "## ✅ Professional Design System - Troubleshooting Checklist ### 1. **Setup Database** (REQUIRED) - [ ] Go to Supabase Dashboard → SQL Editor - [ ] Create new query - [ ] Copy-paste the SQL from the message above (all the CREATE TABLE statements) - [ ] Click \"Run\" - [ ] Verify 5 templates are created in `professional_design_templates`"
+  },
+  {
+    "intent": "PROGRESS TRACKER",
+    "triggers": [
+      "progress",
+      "tracker"
+    ],
+    "answer": "# 📊 Progress Tracker - Adding Templates for 1M+ Unique Designs ## Current Status: Phase 1 (Adding 8 Styles to Each Generator) ### Generator Completion Matrix | # | Generator | Status | getRandomStyle | Styles Count | % Complete | |---|-----------|--------|-----------------|--------------|-----------|"
+  },
+  {
+    "intent": "PROJECT COMPLETION REPORT",
+    "triggers": [
+      "project",
+      "completion",
+      "report"
+    ],
+    "answer": "# 🎉 PROFESSIONAL DESIGN SYSTEM - COMPLETE & READY ## ✅ PROJECT COMPLETION STATUS ### UI Component: FIXED ✓ - **File**: `src/app/professional-design/page.tsx` - **Status**: All errors resolved, compiles successfully - **Features**:"
+  },
+  {
+    "intent": "QUICK REFERENCE",
+    "triggers": [
+      "quick",
+      "reference"
+    ],
+    "answer": "# ⚡ Quick Reference Card - Add Templates to Each Generator ## One-Minute Summary **Goal**: Turn 40 designs (10 categories × 4 styles) into 80, 240, 960, or 10 billion+ unique designs **Status**: ✅ Business card done (8 styles) | ⏳ 9 more generators to update"
+  },
+  {
+    "intent": "README",
+    "triggers": [
+      "readme"
+    ],
+    "answer": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app). ## Getting Started First, run the development server: ```bash npm run dev"
+  },
+  {
+    "intent": "SCALING TEMPLATES GUIDE",
+    "triggers": [
+      "scaling",
+      "templates",
+      "guide"
+    ],
+    "answer": "# 🚀 Scaling to 1 Million Unique Designs - Complete Implementation Guide ## Current Architecture Status ✅ **Business Card Generator**: Now has **8 unique styles** - Style 0: Left Gradient Bar - Style 1: Modern Centered (previously Style 1) - Style 2: Asymmetric (previously Style 2)"
+  },
+  {
+    "intent": "START HERE",
+    "triggers": [
+      "start",
+      "here"
+    ],
+    "answer": "# 🎯 COMPLETE SOLUTION - Scale Your Designs from 40 to 1M+ ## What You Have Now ### ✅ Complete Working Example - **Business Card Generator**: 8 unique styles (was 4) - **Modern UI**: Glassmorphism effects, dynamic forms, gradient backgrounds - **Random Selection**: Each generation picks a random style automatically"
+  },
+  {
+    "intent": "TEMPLATE EXPANSION GUIDE",
+    "triggers": [
+      "template",
+      "expansion",
+      "guide"
+    ],
+    "answer": "# Design Template Expansion Guide ## Overview Currently, each design generator supports **4 style variations**. To scale for millions of unique designs, you can: 1. **Add more styles per category** (8-20+ variations) 2. **Add style combinations** (mixing layouts with color themes) 3. **Add parametric variations** (different element positioning based on input)"
+  },
+  {
+    "intent": "TESTING CHECKLIST",
+    "triggers": [
+      "testing",
+      "checklist"
+    ],
+    "answer": "# ✅ TESTING CHECKLIST ## Pre-Launch Verification ### Code Quality - [x] No TypeScript errors - [x] All imports resolved - [x] Functions properly exported"
+  },
+  {
+    "intent": "UI UX DESIGN GUIDE",
+    "triggers": [
+      "ui",
+      "ux",
+      "design",
+      "guide"
+    ],
+    "answer": "# Design Studio - UI/UX Features Guide ## 🎨 Modern Dark Theme Components ### Header Section ``` ┌─────────────────────────────────────────────────────────────┐ │ ✨ Design Studio │"
+  },
+  {
+    "intent": "USER GUIDE",
+    "triggers": [
+      "user",
+      "guide"
+    ],
+    "answer": "# Design Studio - User Guide ## 🚀 Getting Started ### 1. Access the Design Studio Navigate to `/professional-design` in your application. You'll see:"
+  },
+  {
+    "intent": "VISUAL ARCHITECTURE",
+    "triggers": [
+      "visual",
+      "architecture"
+    ],
+    "answer": "# 🎨 Visual Architecture - How 1M+ Unique Designs Work ## System Overview ``` ┌─────────────────────────────┐ │ User Generates Design │ └──────────────┬──────────────┘"
+  },
+  {
+    "intent": "Page: /",
+    "triggers": [],
+    "answer": "This route corresponds to /. Open the / page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/contributors",
+    "triggers": [
+      "admin",
+      "contributors"
+    ],
+    "answer": "This route corresponds to admin/contributors. Open the admin/contributors page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/import-template",
+    "triggers": [
+      "admin",
+      "import",
+      "template"
+    ],
+    "answer": "This route corresponds to admin/import-template. Open the admin/import-template page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/printers",
+    "triggers": [
+      "admin",
+      "printers"
+    ],
+    "answer": "This route corresponds to admin/printers. Open the admin/printers page in the site to view content."
+  },
+  {
+    "intent": "Page: alton-designs",
+    "triggers": [
+      "alton",
+      "designs"
+    ],
+    "answer": "This route corresponds to alton-designs. Open the alton-designs page in the site to view content."
+  },
+  {
+    "intent": "Page: alton-designs/upload",
+    "triggers": [
+      "alton",
+      "designs",
+      "upload"
+    ],
+    "answer": "This route corresponds to alton-designs/upload. Open the alton-designs/upload page in the site to view content."
+  },
+  {
+    "intent": "Page: alton-designs/[slug]",
+    "triggers": [
+      "alton",
+      "designs",
+      "slug"
+    ],
+    "answer": "This route corresponds to alton-designs/[slug]. Open the alton-designs/[slug] page in the site to view content."
+  },
+  {
+    "intent": "Page: auth",
+    "triggers": [
+      "auth"
+    ],
+    "answer": "This route corresponds to auth. Open the auth page in the site to view content."
+  },
+  {
+    "intent": "Page: community",
+    "triggers": [
+      "community"
+    ],
+    "answer": "This route corresponds to community. Open the community page in the site to view content."
+  },
+  {
+    "intent": "Page: community/circle/create",
+    "triggers": [
+      "community",
+      "circle",
+      "create"
+    ],
+    "answer": "This route corresponds to community/circle/create. Open the community/circle/create page in the site to view content."
+  },
+  {
+    "intent": "Page: community/circle/[slug]",
+    "triggers": [
+      "community",
+      "circle",
+      "slug"
+    ],
+    "answer": "This route corresponds to community/circle/[slug]. Open the community/circle/[slug] page in the site to view content."
+  },
+  {
+    "intent": "Page: community/explore",
+    "triggers": [
+      "community",
+      "explore"
+    ],
+    "answer": "This route corresponds to community/explore. Open the community/explore page in the site to view content."
+  },
+  {
+    "intent": "Page: community/post/create",
+    "triggers": [
+      "community",
+      "post",
+      "create"
+    ],
+    "answer": "This route corresponds to community/post/create. Open the community/post/create page in the site to view content."
+  },
+  {
+    "intent": "Page: contributor/apply",
+    "triggers": [
+      "contributor",
+      "apply"
+    ],
+    "answer": "This route corresponds to contributor/apply. Open the contributor/apply page in the site to view content."
+  },
+  {
+    "intent": "Page: contributor/apply/success",
+    "triggers": [
+      "contributor",
+      "apply",
+      "success"
+    ],
+    "answer": "This route corresponds to contributor/apply/success. Open the contributor/apply/success page in the site to view content."
+  },
+  {
+    "intent": "Page: contributor/dashboard",
+    "triggers": [
+      "contributor",
+      "dashboard"
+    ],
+    "answer": "This route corresponds to contributor/dashboard. Open the contributor/dashboard page in the site to view content."
+  },
+  {
+    "intent": "Page: contributor/settings",
+    "triggers": [
+      "contributor",
+      "settings"
+    ],
+    "answer": "This route corresponds to contributor/settings. Open the contributor/settings page in the site to view content."
+  },
+  {
+    "intent": "Page: cookies",
+    "triggers": [
+      "cookies"
+    ],
+    "answer": "This route corresponds to cookies. Open the cookies page in the site to view content."
+  },
+  {
+    "intent": "Page: designs",
+    "triggers": [
+      "designs"
+    ],
+    "answer": "This route corresponds to designs. Open the designs page in the site to view content."
+  },
+  {
+    "intent": "Page: help",
+    "triggers": [
+      "help"
+    ],
+    "answer": "This route corresponds to help. Open the help page in the site to view content."
+  },
+  {
+    "intent": "Page: home",
+    "triggers": [
+      "home"
+    ],
+    "answer": "This route corresponds to home. Open the home page in the site to view content."
+  },
+  {
+    "intent": "Page: login",
+    "triggers": [
+      "login"
+    ],
+    "answer": "This route corresponds to login. Open the login page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace",
+    "triggers": [
+      "marketplace"
+    ],
+    "answer": "This route corresponds to marketplace. Open the marketplace page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/check-data",
+    "triggers": [
+      "marketplace",
+      "check",
+      "data"
+    ],
+    "answer": "This route corresponds to marketplace/check-data. Open the marketplace/check-data page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/debug",
+    "triggers": [
+      "marketplace",
+      "debug"
+    ],
+    "answer": "This route corresponds to marketplace/debug. Open the marketplace/debug page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/explore",
+    "triggers": [
+      "marketplace",
+      "explore"
+    ],
+    "answer": "This route corresponds to marketplace/explore. Open the marketplace/explore page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/following",
+    "triggers": [
+      "marketplace",
+      "following"
+    ],
+    "answer": "This route corresponds to marketplace/following. Open the marketplace/following page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/notifications",
+    "triggers": [
+      "marketplace",
+      "notifications"
+    ],
+    "answer": "This route corresponds to marketplace/notifications. Open the marketplace/notifications page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/profile",
+    "triggers": [
+      "marketplace",
+      "profile"
+    ],
+    "answer": "This route corresponds to marketplace/profile. Open the marketplace/profile page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/upload",
+    "triggers": [
+      "marketplace",
+      "upload"
+    ],
+    "answer": "This route corresponds to marketplace/upload. Open the marketplace/upload page in the site to view content."
+  },
+  {
+    "intent": "Page: marketplace/user/user",
+    "triggers": [
+      "marketplace",
+      "user",
+      "user"
+    ],
+    "answer": "This route corresponds to marketplace/user/user. Open the marketplace/user/user page in the site to view content."
+  },
+  {
+    "intent": "Page: notifications",
+    "triggers": [
+      "notifications"
+    ],
+    "answer": "This route corresponds to notifications. Open the notifications page in the site to view content."
+  },
+  {
+    "intent": "Page: onboarding",
+    "triggers": [
+      "onboarding"
+    ],
+    "answer": "This route corresponds to onboarding. Open the onboarding page in the site to view content."
+  },
+  {
+    "intent": "Page: print",
+    "triggers": [
+      "print"
+    ],
+    "answer": "This route corresponds to print. Open the print page in the site to view content."
+  },
+  {
+    "intent": "Page: printer/dashboard",
+    "triggers": [
+      "printer",
+      "dashboard"
+    ],
+    "answer": "This route corresponds to printer/dashboard. Open the printer/dashboard page in the site to view content."
+  },
+  {
+    "intent": "Page: printer/register",
+    "triggers": [
+      "printer",
+      "register"
+    ],
+    "answer": "This route corresponds to printer/register. Open the printer/register page in the site to view content."
+  },
+  {
+    "intent": "Page: privacy",
+    "triggers": [
+      "privacy"
+    ],
+    "answer": "This route corresponds to privacy. Open the privacy page in the site to view content."
+  },
+  {
+    "intent": "Page: professional-design",
+    "triggers": [
+      "professional",
+      "design"
+    ],
+    "answer": "This route corresponds to professional-design. Open the professional-design page in the site to view content."
+  },
+  {
+    "intent": "Page: saved",
+    "triggers": [
+      "saved"
+    ],
+    "answer": "This route corresponds to saved. Open the saved page in the site to view content."
+  },
+  {
+    "intent": "Page: settings",
+    "triggers": [
+      "settings"
+    ],
+    "answer": "This route corresponds to settings. Open the settings page in the site to view content."
+  },
+  {
+    "intent": "Page: studio",
+    "triggers": [
+      "studio"
+    ],
+    "answer": "This route corresponds to studio. Open the studio page in the site to view content."
+  },
+  {
+    "intent": "Page: templates",
+    "triggers": [
+      "templates"
+    ],
+    "answer": "This route corresponds to templates. Open the templates page in the site to view content."
+  },
+  {
+    "intent": "Page: terms",
+    "triggers": [
+      "terms"
+    ],
+    "answer": "This route corresponds to terms. Open the terms page in the site to view content."
+  },
+  {
+    "intent": "Page: test-email",
+    "triggers": [
+      "test",
+      "email"
+    ],
+    "answer": "This route corresponds to test-email. Open the test-email page in the site to view content."
+  },
+  {
+    "intent": "Project Dependencies",
+    "triggers": [
+      "dependencies",
+      "packages",
+      "project"
+    ],
+    "answer": "This project lists the following dependencies: @google/generative-ai, @radix-ui/react-select, @radix-ui/react-slot, @supabase/auth-helpers-nextjs, @supabase/auth-ui-react, @supabase/auth-ui-shared, @supabase/ssr, @supabase/supabase-js, @tldraw/tldraw, class-variance-authority, clsx, fabric, framer-motion, ioredis, jspdf, lucide-react, next, react, react-dom, react-lottie-player, replicate, resend, stripe, tailwind-merge, tldraw"
+  }
+]

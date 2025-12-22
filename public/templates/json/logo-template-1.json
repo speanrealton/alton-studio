@@ -1,0 +1,14 @@
+{
+  "id": "logo-template-1",
+  "name": "Simple Logo Layout",
+  "category": "Logos",
+  "thumbnail": "https://images.unsplash.com/photo-1635322966219-b75ed372eb01?w=400&h=400&fit=crop",
+  "size": { "width": 1000, "height": 1000 },
+  "data": {
+    "shapes": [
+      { "type": "geo", "x": 0, "y": 0, "props": { "geo": "rectangle", "w": 1000, "h": 1000, "color": "white", "fill": "solid" } },
+      { "type": "geo", "x": 400, "y": 300, "props": { "geo": "ellipse", "w": 200, "h": 200, "color": "blue", "fill": "solid" } },
+      { "type": "note", "x": 250, "y": 600, "props": { "text": "Company Name", "size": "xl" } }
+    ]
+  }
+}

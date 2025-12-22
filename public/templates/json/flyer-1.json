@@ -1,0 +1,17 @@
+{
+  "id": "flyer-1",
+  "name": "Event Flyer",
+  "category": "Flyers",
+  "thumbnail": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&h=600&fit=crop",
+  "size": { "width": 2550, "height": 3300 },
+  "data": {
+    "shapes": [
+      { "type": "geo", "x": 0, "y": 0, "props": { "geo": "rectangle", "w": 2550, "h": 3300, "color": "black", "fill": "solid" } },
+      { "type": "geo", "x": 100, "y": 100, "props": { "geo": "rectangle", "w": 2350, "h": 800, "color": "orange", "fill": "solid" } },
+      { "type": "note", "x": 200, "y": 300, "props": { "text": "EVENT NAME", "size": "xl" } },
+      { "type": "note", "x": 200, "y": 1200, "props": { "text": "Date: January 1, 2025", "size": "l" } },
+      { "type": "note", "x": 200, "y": 1400, "props": { "text": "Location: Your Venue", "size": "l" } },
+      { "type": "note", "x": 200, "y": 1800, "props": { "text": "Add your event description here. Make it exciting!", "size": "m" } }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "instagram-post-1",
+  "name": "Instagram Quote Post",
+  "category": "Social Media",
+  "thumbnail": "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=400&fit=crop",
+  "size": { "width": 1080, "height": 1080 },
+  "data": {
+    "shapes": [
+      { "type": "geo", "x": 0, "y": 0, "props": { "geo": "rectangle", "w": 1080, "h": 1080, "color": "violet", "fill": "solid" } },
+      { "type": "geo", "x": 140, "y": 350, "props": { "geo": "rectangle", "w": 800, "h": 380, "color": "white", "fill": "none" } }
+    ]
+  }
+}
