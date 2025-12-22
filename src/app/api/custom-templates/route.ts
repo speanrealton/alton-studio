@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Custom templates data - keep existing hardcoded ones as fallback
-const CUSTOM_TEMPLATES = [];
+const CUSTOM_TEMPLATES: any[] = [];
 
 export async function GET() {
   try {

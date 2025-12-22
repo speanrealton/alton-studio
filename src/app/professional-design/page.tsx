@@ -165,7 +165,7 @@ const nav = [
   };
 
   const handleGenerate = async () => {
-    const missing = [];
+    const missing: string[] = [];
     if (config.requiredFields.includes('companyName') && !companyName) missing.push('Company Name');
     if (config.requiredFields.includes('tagline') && !tagline) missing.push('Tagline');
     if (config.requiredFields.includes('industry') && !industry) missing.push('Industry');

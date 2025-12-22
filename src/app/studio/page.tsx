@@ -2067,7 +2067,7 @@ export default function StudioPage() {
   const applyFilters = () => {
     if (!selectedObject || selectedObject.type !== 'image') return;
     
-    const filters = [];
+    const filters: any[] = [];
     if (brightness !== 0) {
       filters.push(new fabric.Image.filters.Brightness({ brightness: brightness / 100 }));
     }
