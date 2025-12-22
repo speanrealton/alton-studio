@@ -75,7 +75,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const updatePrinterStatus = async (printerId, newStatus) => {
+  const updatePrinterStatus = async (printerId: string, newStatus: string) => {
     setProcessing(true);
     const { error } = await supabase
       .from('printers')
