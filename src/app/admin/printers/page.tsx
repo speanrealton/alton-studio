@@ -231,7 +231,7 @@ export default function AdminDashboard() {
         {/* Printers List */}
         {!loading && (
           <div className="space-y-4">
-            {printers.map(printer => (
+            {printers.map((printer: any) => (
               <motion.div
                 key={printer.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
                     {/* Portfolio Preview */}
                     {printer.printer_portfolio?.length > 0 && (
                       <div className="flex gap-2 mb-4">
-                        {printer.printer_portfolio.slice(0, 4).map((item, index) => (
+                        {printer.printer_portfolio.slice(0, 4).map((item: any, index: number) => (
                           <img 
                             key={item.id}
                             src={item.image_url}
@@ -473,7 +473,7 @@ export default function AdminDashboard() {
                     <div className="bg-white/5 border border-purple-500/20 rounded-2xl p-6">
                       <h3 className="text-xl font-bold text-white mb-4">Services Offered</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {selectedPrinter.printer_services.map(service => (
+                        {selectedPrinter.printer_services.map((service: any) => (
                           <div key={service.id} className="bg-white/5 border border-purple-500/10 rounded-xl p-4">
                             <div className="flex justify-between items-start mb-2">
                               <h4 className="font-bold text-white">{service.service_name}</h4>
@@ -495,7 +495,7 @@ export default function AdminDashboard() {
                     <div className="bg-white/5 border border-purple-500/20 rounded-2xl p-6">
                       <h3 className="text-xl font-bold text-white mb-4">Portfolio ({selectedPrinter.printer_portfolio.length} images)</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {selectedPrinter.printer_portfolio.map(item => (
+                        {selectedPrinter.printer_portfolio.map((item: any) => (
                           <img
                             key={item.id}
                             src={item.image_url}
