@@ -6,9 +6,9 @@ import { CheckCircle, XCircle, Clock, Eye, Mail, Phone, Globe, MapPin, Star, Tre
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminDashboard() {
-  const [printers, setPrinters] = useState([]);
+  const [printers, setPrinters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPrinter, setSelectedPrinter] = useState(null);
+  const [selectedPrinter, setSelectedPrinter] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 });
