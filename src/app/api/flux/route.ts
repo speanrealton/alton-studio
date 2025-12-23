@@ -12,7 +12,6 @@ const aiModels = {
     { "slug": "stability-ai/stable-diffusion-3", "name": "Stable Diffusion 3", "paid": true }
   ]
 };
-import Redis from 'ioredis';
 
 // Simple in-memory cache for resolved model version IDs to avoid fetching metadata every request.
 const modelVersionCache = new Map<string, string>();
