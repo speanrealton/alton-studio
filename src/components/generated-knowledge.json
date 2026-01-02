@@ -96,6 +96,20 @@
     "answer": "Prices are set by partner printers and depend on material, quantity, and turnaround. Use the 'Request Quote' flow to receive competitive bids. Beware of very low bids — check printer reviews and verification badges."
   },
   {
+    "intent": "Component: AgentChatPanel",
+    "triggers": [
+      "agentchatpanel"
+    ],
+    "answer": "import { useState, useEffect, useRef } from 'react'; import { supabase } from '@/lib/supabase'; import { Send, X } from 'lucide-react'; interface Message { id: string; session_id: string; message: string;"
+  },
+  {
+    "intent": "Component: AgentNotificationPanel",
+    "triggers": [
+      "agentnotificationpanel"
+    ],
+    "answer": "import { useState, useEffect } from 'react'; import { supabase } from '@/lib/supabase'; import { Bell } from 'lucide-react'; import AgentChatPanel from './AgentChatPanel'; interface Notification { id: string; user_id: string;"
+  },
+  {
     "intent": "Component: AnalyticsDashboard",
     "triggers": [
       "analyticsdashboard"
@@ -107,7 +121,7 @@
     "triggers": [
       "appsidebar"
     ],
-    "answer": "src/components/AppSidebar.tsx 'use client'; import Link from 'next/link'; import { usePathname } from 'next/navigation'; import { Home, Plus, LayoutTemplate, Sparkles, FolderOpen } from 'lucide-react'; const items = [ { icon: Home, label: 'Home', href: '/home' },"
+    "answer": "src/components/AppSidebar.tsx 'use client'; import Link from 'next/link'; import { usePathname } from 'next/navigation'; import { Home, Plus, LayoutTemplate, Sparkles, FolderOpen } from 'lucide-react'; import { useLanguageContext } from '@/providers/LanguageProvider'; const items = ["
   },
   {
     "intent": "Component: AuthButton",
@@ -143,6 +157,13 @@
       "currencyselector"
     ],
     "answer": "src/components/CurrencySelector.tsx - Currency Selection Component 'use client'; import { useState } from 'react'; import { CURRENCIES, getAllCurrencies, getCurrencyName, getCurrencySymbol } from '@/lib/currencies'; import { DollarSign, ChevronDown } from 'lucide-react'; import type { CurrencyCode } from '@/lib/currencies';"
+  },
+  {
+    "intent": "Component: CustomerSupport",
+    "triggers": [
+      "customersupport"
+    ],
+    "answer": "'use client'; import { useState, useEffect, useRef } from 'react'; import { motion, AnimatePresence } from 'framer-motion'; import { MessageCircle, X, Send, Phone, Mail, Clock, ChevronDown } from 'lucide-react'; import { supabase } from '@/lib/supabase';"
   },
   {
     "intent": "Component: GeoLocationSearch",
@@ -194,6 +215,37 @@
     "answer": "See StripePayment.tsx"
   },
   {
+    "intent": "Component: SupportChatWidget",
+    "triggers": [
+      "supportchatwidget"
+    ],
+    "answer": "import { useState, useEffect, useRef } from 'react'; import { supabase } from '@/lib/supabase'; import { Send, X, ArrowLeft, MessageSquare, Zap, Shield, Globe } from 'lucide-react'; interface ChatSession { id: string;"
+  },
+  {
+    "intent": "Lib: admin-auth",
+    "triggers": [
+      "admin",
+      "auth"
+    ],
+    "answer": "// Secure Admin & Executive Authentication System import { createClient } from '@supabase/supabase-js'; import crypto from 'crypto'; const supabase = createClient( process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! ); // Rate limiting configuration export const RATE_LIMIT_CONFIG = { attempts: 5, windowMs: 15 * 60 * 1000, // 15 minutes"
+  },
+  {
+    "intent": "Lib: admin-middleware",
+    "triggers": [
+      "admin",
+      "middleware"
+    ],
+    "answer": "// Admin/Executive Authentication Middleware import { NextRequest, NextResponse } from 'next/server'; import { createClient } from '@supabase/supabase-js'; import crypto from 'crypto'; const supabase = createClient( process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY! ); // Rate limiting store (in production, use Redis) const rateLimitStore = new Map<string, { attempts: number; resetTime: number }>();"
+  },
+  {
+    "intent": "Lib: auth-utils",
+    "triggers": [
+      "auth",
+      "utils"
+    ],
+    "answer": "import { supabase } from './supabase'; export type UserRole = 'user' | 'agent' | 'admin'; interface UserWithRole { id: string; email?: string; role: UserRole; } /** * Get current user with their role */ export async function getCurrentUserWithRole(): Promise<UserWithRole | null> {"
+  },
+  {
     "intent": "Lib: collaboration",
     "triggers": [
       "collaboration"
@@ -206,6 +258,21 @@
       "currencies"
     ],
     "answer": "// src/lib/currencies.ts - Multi-Currency Support System export const CURRENCIES = { USD: { name: 'US Dollar', symbol: '$', code: 'USD', rate: 1 }, EUR: { name: 'Euro', symbol: '€', code: 'EUR', rate: 0.92 }, GBP: { name: 'British Pound', symbol: '£', code: 'GBP', rate: 0.79 },"
+  },
+  {
+    "intent": "Lib: languages",
+    "triggers": [
+      "languages"
+    ],
+    "answer": "// Language translations for the platform export type LanguageCode = 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru' | 'ja' | 'zh' | 'ko' | 'ar' | 'hi'; export const translations: Record<LanguageCode, Record<string, string>> = {"
+  },
+  {
+    "intent": "Lib: permission-checks",
+    "triggers": [
+      "permission",
+      "checks"
+    ],
+    "answer": "import { NextRequest, NextResponse } from 'next/server'; import { supabase } from './supabase'; import { UserRole } from './auth-utils'; /** * Check if a user has permission for an API endpoint */ export async function checkApiPermission( request: NextRequest, requiredRole: UserRole | UserRole[]"
   },
   {
     "intent": "Lib: storage",
@@ -236,581 +303,6 @@
     "answer": "import { clsx, type ClassValue } from \"clsx\" import { twMerge } from \"tailwind-merge\" export function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)) }"
   },
   {
-    "intent": "CIRCLE EDIT DEPLOYMENT CHECKLIST",
-    "triggers": [
-      "circle",
-      "edit",
-      "deployment",
-      "checklist"
-    ],
-    "answer": "# ✅ Circle Edit Feature - Integration Checklist ## Pre-Deployment Verification ### Database Setup - [x] Circles table exists - [x] creator_id field exists - [x] cover_url field exists"
-  },
-  {
-    "intent": "CIRCLE EDIT FEATURE GUIDE",
-    "triggers": [
-      "circle",
-      "edit",
-      "feature",
-      "guide"
-    ],
-    "answer": "# 🎨 Circle Edit Feature - Complete Implementation Guide ## Overview Circle creators can now easily edit their circle details including cover image, icon, name, description, and category. The edit feature provides a smooth, user-friendly interface with real-time preview and validation. --- ## ✨ Features Implemented"
-  },
-  {
-    "intent": "CIRCLE EDIT FEATURE IMPLEMENTATION SUMMARY",
-    "triggers": [
-      "circle",
-      "edit",
-      "feature",
-      "implementation",
-      "summary"
-    ],
-    "answer": "# 🚀 Circle Edit Feature - Implementation Summary ## What Was Built ### ✅ Circle Edit Feature Enable circle creators to edit their circle's details and images after creation. **Status**: 🟢 COMPLETE & PRODUCTION READY"
-  },
-  {
-    "intent": "CIRCLE EDIT FEATURE TECHNICAL REFERENCE",
-    "triggers": [
-      "circle",
-      "edit",
-      "feature",
-      "technical",
-      "reference"
-    ],
-    "answer": "# 🔧 Circle Edit Feature - Technical Reference ## Architecture Overview ``` User (Circle Creator) ↓ Click \"Edit Circle\" button"
-  },
-  {
-    "intent": "CIRCLE EDIT USER GUIDE",
-    "triggers": [
-      "circle",
-      "edit",
-      "user",
-      "guide"
-    ],
-    "answer": "# 🎨 Circle Edit Feature - User Guide ## Quick Start ### Edit Your Circle 1. Go to your circle page 2. Click the **\"Edit Circle\"** button (only visible if you created it) 3. Make your changes"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS CERTIFICATE",
-    "triggers": [
-      "community",
-      "settings",
-      "certificate"
-    ],
-    "answer": "# 🏆 COMMUNITY SETTINGS FEATURE - COMPLETION CERTIFICATE ``` ╔════════════════════════════════════════════════════════════════╗ ║ ║ ║ ✅ COMMUNITY SETTINGS FEATURE IMPLEMENTATION ║ ║ COMPLETION CERTIFICATE ║ ║ ║"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS COMPLETE",
-    "triggers": [
-      "community",
-      "settings",
-      "complete"
-    ],
-    "answer": "# ✅ COMPLETE: Community Settings Feature Implementation ## 🎉 What's Been Done I've successfully implemented a **comprehensive Community Settings system** for your community page that enables real-time customization with persistent storage. Here's what's included: ---"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS GUIDE",
-    "triggers": [
-      "community",
-      "settings",
-      "guide"
-    ],
-    "answer": "# Community Settings Feature Guide ## Overview The Community Settings feature allows users to customize their community page experience in real-time. Users can change layouts, toggle sections, adjust sorting, and manage notification preferences all from a dedicated settings modal. ## Features Implemented ### 1. **Settings Button/Icon**"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS IMPLEMENTATION",
-    "triggers": [
-      "community",
-      "settings",
-      "implementation"
-    ],
-    "answer": "# ✅ Community Settings Implementation Complete ## Summary Successfully added a comprehensive **Community Settings system** to the community page with real-time customization, persistent storage, and full accessibility support. ## 🎯 Features Implemented ### 1. **Settings Button & Modal** ⚙️"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS INDEX",
-    "triggers": [
-      "community",
-      "settings",
-      "index"
-    ],
-    "answer": "# 📚 Community Settings - Complete Documentation Index ## Quick Navigation ### 🚀 Start Here - **New to the feature?** → [COMMUNITY_SETTINGS_QUICK_START.md](COMMUNITY_SETTINGS_QUICK_START.md) - **Want the full picture?** → [COMMUNITY_SETTINGS_README.md](COMMUNITY_SETTINGS_README.md) - **Visual learner?** → [COMMUNITY_SETTINGS_VISUAL_GUIDE.md](COMMUNITY_SETTINGS_VISUAL_GUIDE.md)"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS QUICK START",
-    "triggers": [
-      "community",
-      "settings",
-      "quick",
-      "start"
-    ],
-    "answer": "# 🎉 Community Settings Feature - Complete Implementation ## Overview You now have a fully functional **Community Settings System** that allows users to customize their entire community page experience in real-time with persistent storage across devices. ## ✨ What Was Added ### 1. **Settings Button** ⚙️"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS README",
-    "triggers": [
-      "community",
-      "settings",
-      "readme"
-    ],
-    "answer": "# 🎯 Community Settings Feature - Complete Overview ## Executive Summary Successfully implemented a comprehensive **Community Settings System** that enables users to customize their entire community page experience in real-time with persistent storage across devices and full accessibility support. **Status**: ✅ **PRODUCTION READY**"
-  },
-  {
-    "intent": "COMMUNITY SETTINGS USER GUIDE",
-    "triggers": [
-      "community",
-      "settings",
-      "user",
-      "guide"
-    ],
-    "answer": "# Community Settings - Quick Start Guide ## 🎯 What's New? A powerful **Settings Button** in your community page that lets you customize the entire experience in real-time! ## ⚙️ Opening Settings Click the **gear icon** (⚙️) in the top-right corner of the community page."
-  },
-  {
-    "intent": "COMMUNITY SETTINGS VISUAL GUIDE",
-    "triggers": [
-      "community",
-      "settings",
-      "visual",
-      "guide"
-    ],
-    "answer": "# Community Settings - Visual Reference Guide ## Settings Modal Layout ``` ┌─────────────────────────────────────────┐ │ ⚙️ Community Settings X │ ├─────────────────────────────────────────┤"
-  },
-  {
-    "intent": "COPY PASTE TEMPLATES",
-    "triggers": [
-      "copy",
-      "paste",
-      "templates"
-    ],
-    "answer": "# 📋 Copy-Paste Code Templates - Add 8 Styles to Each Generator This file contains ready-to-copy code for adding 8 styles to each of your 9 remaining generators. ## Quick Start For each generator: 1. Find `getRandomStyle()` function → Change `* 4` to `* 8`"
-  },
-  {
-    "intent": "CURRENCY QUICK REFERENCE",
-    "triggers": [
-      "currency",
-      "quick",
-      "reference"
-    ],
-    "answer": "# Currency System - Quick Reference Card ## 📚 Import Statements ```tsx // Utility functions import { convertCurrency, formatCurrency, getCurrencyName, getCurrencySymbol, getAllCurrencies } from '@/lib/currencies'; import type { Currency } from '@/lib/currencies';"
-  },
-  {
-    "intent": "CURRENCY SYSTEM INDEX",
-    "triggers": [
-      "currency",
-      "system",
-      "index"
-    ],
-    "answer": "# 🌍 Multi-Currency System - Complete Index ## 📍 Navigation Guide ### 🚀 Getting Started - **New to the system?** → Start here: [`START_CURRENCY_HERE.md`](START_CURRENCY_HERE.md) - **Need code examples?** → [`MULTI_CURRENCY_PRACTICAL_GUIDE.md`](MULTI_CURRENCY_PRACTICAL_GUIDE.md) - **Quick lookup?** → [`CURRENCY_QUICK_REFERENCE.md`](CURRENCY_QUICK_REFERENCE.md)"
-  },
-  {
-    "intent": "DESIGN GENERATOR GUIDE",
-    "triggers": [
-      "design",
-      "generator",
-      "guide"
-    ],
-    "answer": "# 🎨 Professional Design Generator - Usage Guide ## Quick Start ### 1. Navigate to the Design Generator ``` Visit: http://localhost:3000/professional-design ```"
-  },
-  {
-    "intent": "DESIGN STUDIO UPDATES",
-    "triggers": [
-      "design",
-      "studio",
-      "updates"
-    ],
-    "answer": "# Design Studio - Major Updates ## 🎨 New Features Implemented ### 1. **Dynamic Form Fields Based on Design Type** The form now intelligently adapts based on the selected design template: #### **Business Card** 💼"
-  },
-  {
-    "intent": "DESIGN SYSTEM IMPROVEMENTS",
-    "triggers": [
-      "design",
-      "system",
-      "improvements"
-    ],
-    "answer": "# Professional Design System - Enhancement Summary ## 🎨 What's Been Improved ### 1. **UI File Completely Fixed** - ✅ Removed all duplicate function definitions (`handleGenerate`, `handleDownload`) - ✅ Removed references to undefined `COLORS` constant and `colorSet` state - ✅ Replaced preset color scheme with modern **custom hex color picker**"
-  },
-  {
-    "intent": "DOCUMENTATION OVERVIEW",
-    "triggers": [
-      "documentation",
-      "overview"
-    ],
-    "answer": "# 📚 Multi-Currency System - Documentation Overview ## All Documentation Files Your multi-currency system comes with **8 comprehensive documentation files** (90+ pages) covering every aspect of the implementation. ---"
-  },
-  {
-    "intent": "FINAL REPORT CURRENCY",
-    "triggers": [
-      "final",
-      "report",
-      "currency"
-    ],
-    "answer": "# 🎉 Multi-Currency System - Complete Implementation Report ## Executive Summary ✅ **Status: COMPLETE AND PRODUCTION READY** A **fully-functional, well-documented, production-ready multi-currency system** has been successfully implemented for the Alton Studio application, supporting 20 global currencies with real-time conversion capabilities."
-  },
-  {
-    "intent": "GETTING STARTED CHECKLIST",
-    "triggers": [
-      "getting",
-      "started",
-      "checklist"
-    ],
-    "answer": "# ✅ Multi-Currency System - Getting Started Checklist ## 🚀 Quick Start (15 minutes) ### Step 1: Understand the System (5 min) - [ ] Read `START_CURRENCY_HERE.md` - [ ] Understand the 20 currencies - [ ] Know how users enable currency"
-  },
-  {
-    "intent": "IMPLEMENTATION COMPLETE",
-    "triggers": [
-      "implementation",
-      "complete"
-    ],
-    "answer": "# 🎉 Complete Implementation Summary - 1M+ Unique Designs System ## ✅ What Has Been Completed ### 1. Business Card Generator Enhanced ✅ - **Status**: Fully updated to 8 styles - **Styles**: 0-7 (doubled from original 4) - **New Styles Added**:"
-  },
-  {
-    "intent": "IMPLEMENTATION COMPLETE CURRENCY",
-    "triggers": [
-      "implementation",
-      "complete",
-      "currency"
-    ],
-    "answer": "# Multi-Currency Implementation - Final Summary ## 🎉 What We Accomplished Today We've successfully built and integrated a **complete, production-ready multi-currency system** for the Alton Studio application. ---"
-  },
-  {
-    "intent": "IMPLEMENTATION STATUS",
-    "triggers": [
-      "implementation",
-      "status"
-    ],
-    "answer": "# Implementation Complete - Verification Summary ## ✅ What Has Been Completed ### Code Changes - ✅ [src/app/print/page.tsx](src/app/print/page.tsx) - Updated client quote interface - Replaced `receivedQuotes` with `quoteConversations` + `quoteMessages` - Added real-time message functions"
-  },
-  {
-    "intent": "INDEX",
-    "triggers": [
-      "index"
-    ],
-    "answer": "# 📚 Complete Index - All Documentation Files ## 🌍 Multi-Currency System Documentation Hub Welcome! This is your central hub for all multi-currency system documentation. ---"
-  },
-  {
-    "intent": "MIGRATION SETUP GUIDE",
-    "triggers": [
-      "migration",
-      "setup",
-      "guide"
-    ],
-    "answer": "# Supabase Database Migrations - Setup Guide ## Migrations to Run You need to run these SQL migrations in your Supabase dashboard to set up the complete video marketplace system with likes, views, and shares. ### 1. First - Add Views and Shares Columns (add_views_column.sql) ```sql"
-  },
-  {
-    "intent": "MULTI CURRENCY INTEGRATION GUIDE",
-    "triggers": [
-      "multi",
-      "currency",
-      "integration",
-      "guide"
-    ],
-    "answer": "# Multi-Currency System Integration Guide ## Overview A comprehensive multi-currency system has been implemented supporting **20 global currencies** with real-time conversion capabilities. Users can now set their preferred currency in settings, and all prices/amounts displayed across the platform will be converted to their home currency. ## ✅ Completed"
-  },
-  {
-    "intent": "MULTI CURRENCY PRACTICAL GUIDE",
-    "triggers": [
-      "multi",
-      "currency",
-      "practical",
-      "guide"
-    ],
-    "answer": "# Multi-Currency System - Practical Usage Guide ## Quick Integration Examples ### Example 1: Display a Product Price in Multiple Currencies ```tsx // In your product card component"
-  },
-  {
-    "intent": "MULTI CURRENCY README",
-    "triggers": [
-      "multi",
-      "currency",
-      "readme"
-    ],
-    "answer": "# 🌍 Multi-Currency System - Complete Implementation ✅ ## What We've Built Today A **production-ready multi-currency system** supporting **20 global currencies** with real-time conversion capabilities, user preference persistence, and reusable UI components. ---"
-  },
-  {
-    "intent": "MULTI CURRENCY SESSION SUMMARY",
-    "triggers": [
-      "multi",
-      "currency",
-      "session",
-      "summary"
-    ],
-    "answer": "# Multi-Currency System Implementation - Session Summary ## 🎉 Completed Today ### 1. Core Multi-Currency Infrastructure ✅ **Created:** `src/lib/currencies.ts` - Supports 20 global currencies (USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY, INR, MXN, BRL, ZAR, SGD, HKD, NZD, KRW, THB, AED, SEK, NOK)"
-  },
-  {
-    "intent": "PHASE 1 CHECKLIST",
-    "triggers": [
-      "phase",
-      "1",
-      "checklist"
-    ],
-    "answer": "# ✅ Implementation Checklist - Add Templates to Scale to 1M+ Designs ## Project Overview - **Goal**: Scale from 40 unique designs to 1M+ unique designs - **Current Status**: Phase 1, 10% complete (1/10 generators done) - **Time Estimate**: 1-2 hours to complete Phase 1 - **Success Metric**: All 10 generators support 8 styles each"
-  },
-  {
-    "intent": "PROFESSIONAL DESIGN GUIDE",
-    "triggers": [
-      "professional",
-      "design",
-      "guide"
-    ],
-    "answer": "# Professional Design System - Implementation Guide ## Overview Your Alton Studio now has an integrated professional design generation system powered by Supabase + Replicate AI. ## Features ### 1. **Design Categories**"
-  },
-  {
-    "intent": "PROFESSIONAL DESIGN TROUBLESHOOTING",
-    "triggers": [
-      "professional",
-      "design",
-      "troubleshooting"
-    ],
-    "answer": "## ✅ Professional Design System - Troubleshooting Checklist ### 1. **Setup Database** (REQUIRED) - [ ] Go to Supabase Dashboard → SQL Editor - [ ] Create new query - [ ] Copy-paste the SQL from the message above (all the CREATE TABLE statements) - [ ] Click \"Run\" - [ ] Verify 5 templates are created in `professional_design_templates`"
-  },
-  {
-    "intent": "PROGRESS TRACKER",
-    "triggers": [
-      "progress",
-      "tracker"
-    ],
-    "answer": "# 📊 Progress Tracker - Adding Templates for 1M+ Unique Designs ## Current Status: Phase 1 (Adding 8 Styles to Each Generator) ### Generator Completion Matrix | # | Generator | Status | getRandomStyle | Styles Count | % Complete | |---|-----------|--------|-----------------|--------------|-----------|"
-  },
-  {
-    "intent": "PROJECT COMPLETION REPORT",
-    "triggers": [
-      "project",
-      "completion",
-      "report"
-    ],
-    "answer": "# 🎉 PROFESSIONAL DESIGN SYSTEM - COMPLETE & READY ## ✅ PROJECT COMPLETION STATUS ### UI Component: FIXED ✓ - **File**: `src/app/professional-design/page.tsx` - **Status**: All errors resolved, compiles successfully - **Features**:"
-  },
-  {
-    "intent": "QUICK REFERENCE",
-    "triggers": [
-      "quick",
-      "reference"
-    ],
-    "answer": "# ⚡ Quick Reference Card - Add Templates to Each Generator ## One-Minute Summary **Goal**: Turn 40 designs (10 categories × 4 styles) into 80, 240, 960, or 10 billion+ unique designs **Status**: ✅ Business card done (8 styles) | ⏳ 9 more generators to update"
-  },
-  {
-    "intent": "QUOTE CHAT ARCHITECTURE",
-    "triggers": [
-      "quote",
-      "chat",
-      "architecture"
-    ],
-    "answer": "# Quote Chat System - Architecture Overview ## System Architecture ``` ┌─────────────────────────────────────────────────────────────────────┐ │ ALTON PRINT NETWORK │ └─────────────────────────────────────────────────────────────────────┘"
-  },
-  {
-    "intent": "QUOTE CHAT CODE CHANGES",
-    "triggers": [
-      "quote",
-      "chat",
-      "code",
-      "changes"
-    ],
-    "answer": "# Code Changes - Before & After ## State Management Changes ### print/page.tsx - State Variables #### BEFORE ❌ ```typescript"
-  },
-  {
-    "intent": "QUOTE CHAT DEPLOYMENT",
-    "triggers": [
-      "quote",
-      "chat",
-      "deployment"
-    ],
-    "answer": "# Quote Chat System - Deployment Checklist ## Pre-Deployment Verification ### ✅ Code Changes - [x] `src/app/print/page.tsx` - Updated with chat system - [x] `src/app/printer/dashboard/page.tsx` - Updated with quote messaging - [x] `supabase/migrations/quote_messages.sql` - New database migration"
-  },
-  {
-    "intent": "QUOTE CHAT INDEX",
-    "triggers": [
-      "quote",
-      "chat",
-      "index"
-    ],
-    "answer": "# Quote Chat System - Complete Documentation Index ## 🎯 Quick Navigation ### For Busy People (5 min read) Start here if you want a quick overview: - **[QUOTE_CHAT_SUMMARY.md](QUOTE_CHAT_SUMMARY.md)** - Executive summary of what was changed and why"
-  },
-  {
-    "intent": "QUOTE CHAT QUICK START",
-    "triggers": [
-      "quote",
-      "chat",
-      "quick",
-      "start"
-    ],
-    "answer": "# Quick Implementation Guide - Quote Chat System ## What Was Changed ### 🔧 Files Modified: 1. **d:\\alton-studio\\src\\app\\print\\page.tsx** - Client quote view 2. **d:\\alton-studio\\src\\app\\printer\\dashboard\\page.tsx** - Printer quote response 3. **d:\\alton-studio\\supabase\\migrations\\quote_messages.sql** - NEW database table"
-  },
-  {
-    "intent": "QUOTE CHAT SUMMARY",
-    "triggers": [
-      "quote",
-      "chat",
-      "summary"
-    ],
-    "answer": "# Quote Chat System - Complete Summary ## 🎯 Problem Solved **Original Issue**: - ✅ Quotes from client → printer reached successfully - ❌ Replies from printer → client did NOT reach/deliver"
-  },
-  {
-    "intent": "QUOTE CHAT SYSTEM IMPLEMENTATION",
-    "triggers": [
-      "quote",
-      "chat",
-      "system",
-      "implementation"
-    ],
-    "answer": "# Quote System to Chat System Migration ## Problem Statement The original quote system had a delivery issue where: - ✅ **Working**: Quotes from clients to printers reached successfully - ❌ **Broken**: Replies from printers back to clients were not reaching/delivering ## Solution Implemented"
-  },
-  {
-    "intent": "QUOTE CHAT VISUALS",
-    "triggers": [
-      "quote",
-      "chat",
-      "visuals"
-    ],
-    "answer": "# Quote Chat System - Visual Overview ## The Problem vs The Solution ``` ╔════════════════════════════════════════════════════════════════════════════╗ ║ THE OLD SYSTEM ❌ ║ ║ ║"
-  },
-  {
-    "intent": "QUOTE SYSTEM MIGRATION GUIDE",
-    "triggers": [
-      "quote",
-      "system",
-      "migration",
-      "guide"
-    ],
-    "answer": "# Quote System - Supabase Migration Guide ## Issue Fixed The `respondToQuote` error was caused by missing columns in the `quote_requests` table. The following columns were not present: - `status` (to track pending/quoted/accepted states) - `quoted_price` (to store the printer's quote price) - `printer_notes` (to store additional notes from the printer) - `delivery_time` (to store estimated delivery time)"
-  },
-  {
-    "intent": "README",
-    "triggers": [
-      "readme"
-    ],
-    "answer": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app). ## Getting Started First, run the development server: ```bash npm run dev"
-  },
-  {
-    "intent": "README CURRENCY SYSTEM",
-    "triggers": [
-      "readme",
-      "currency",
-      "system"
-    ],
-    "answer": "# ✨ Multi-Currency System - Complete Implementation Summary ## 🎉 Project Complete! A **fully-functional, production-ready multi-currency system** has been successfully implemented for your Alton Studio application. ---"
-  },
-  {
-    "intent": "SCALING TEMPLATES GUIDE",
-    "triggers": [
-      "scaling",
-      "templates",
-      "guide"
-    ],
-    "answer": "# 🚀 Scaling to 1 Million Unique Designs - Complete Implementation Guide ## Current Architecture Status ✅ **Business Card Generator**: Now has **8 unique styles** - Style 0: Left Gradient Bar - Style 1: Modern Centered (previously Style 1) - Style 2: Asymmetric (previously Style 2)"
-  },
-  {
-    "intent": "SETTINGS CODE SNIPPETS",
-    "triggers": [
-      "settings",
-      "code",
-      "snippets"
-    ],
-    "answer": "# Settings Features - Code Snippets & Implementation Examples ## 1. Copy-Paste Ready Code Snippets ### Custom Hook: useSecuritySettings ```typescript // src/hooks/useSecuritySettings.ts import { useUser } from '@supabase/auth-helpers-react';"
-  },
-  {
-    "intent": "SETTINGS DOCUMENTATION INDEX",
-    "triggers": [
-      "settings",
-      "documentation",
-      "index"
-    ],
-    "answer": "# Settings Page Expansion - Complete Documentation Index ## 📚 Documentation Overview This comprehensive documentation package includes 6 detailed guides covering the complete Settings page expansion with Security, Notifications, and Data management features. ---"
-  },
-  {
-    "intent": "SETTINGS EXPANSION COMPLETE SUMMARY",
-    "triggers": [
-      "settings",
-      "expansion",
-      "complete",
-      "summary"
-    ],
-    "answer": "# Settings Page Expansion - Complete Summary ## 🎉 Project Completion Status: ✅ 100% COMPLETE --- ## Executive Summary"
-  },
-  {
-    "intent": "SETTINGS IMPLEMENTATION GUIDE",
-    "triggers": [
-      "settings",
-      "implementation",
-      "guide"
-    ],
-    "answer": "# Settings Features - Site-Wide Implementation Guide ## Quick Start: Using Settings on Other Pages ### 1. Access User Settings Directly ```typescript // In any component with access to the user"
-  },
-  {
-    "intent": "SETTINGS PAGE EXPANSION GUIDE",
-    "triggers": [
-      "settings",
-      "page",
-      "expansion",
-      "guide"
-    ],
-    "answer": "# Settings Page Expansion Guide ## Security, Notifications, and Data Management Features **Status**: ✅ COMPLETE | **Date**: Current Session | **Type**: Feature Documentation --- ## 1. Overview"
-  },
-  {
-    "intent": "SETTINGS VISUAL REFERENCE GUIDE",
-    "triggers": [
-      "settings",
-      "visual",
-      "reference",
-      "guide"
-    ],
-    "answer": "# Settings Page - Visual Reference & Quick Guide ## Settings Page Navigation Structure ``` ┌─────────────────────────────────────────────────────────┐ │ SETTINGS PAGE - Top Navigation │ │ ← Back | Settings | 🔆/🌙 Dark Mode | Sign Out │"
-  },
-  {
-    "intent": "START CURRENCY HERE",
-    "triggers": [
-      "start",
-      "currency",
-      "here"
-    ],
-    "answer": "# 🎉 Multi-Currency System - Implementation Complete ## Summary A **production-ready, fully-functional multi-currency system** has been successfully implemented supporting **20 global currencies** with real-time conversion, user preference persistence, and beautiful UI components. ---"
-  },
-  {
-    "intent": "START HERE",
-    "triggers": [
-      "start",
-      "here"
-    ],
-    "answer": "# 🎯 COMPLETE SOLUTION - Scale Your Designs from 40 to 1M+ ## What You Have Now ### ✅ Complete Working Example - **Business Card Generator**: 8 unique styles (was 4) - **Modern UI**: Glassmorphism effects, dynamic forms, gradient backgrounds - **Random Selection**: Each generation picks a random style automatically"
-  },
-  {
-    "intent": "TEMPLATE EXPANSION GUIDE",
-    "triggers": [
-      "template",
-      "expansion",
-      "guide"
-    ],
-    "answer": "# Design Template Expansion Guide ## Overview Currently, each design generator supports **4 style variations**. To scale for millions of unique designs, you can: 1. **Add more styles per category** (8-20+ variations) 2. **Add style combinations** (mixing layouts with color themes) 3. **Add parametric variations** (different element positioning based on input)"
-  },
-  {
-    "intent": "TESTING CHECKLIST",
-    "triggers": [
-      "testing",
-      "checklist"
-    ],
-    "answer": "# ✅ TESTING CHECKLIST ## Pre-Launch Verification ### Code Quality - [x] No TypeScript errors - [x] All imports resolved - [x] Functions properly exported"
-  },
-  {
-    "intent": "UI UX DESIGN GUIDE",
-    "triggers": [
-      "ui",
-      "ux",
-      "design",
-      "guide"
-    ],
-    "answer": "# Design Studio - UI/UX Features Guide ## 🎨 Modern Dark Theme Components ### Header Section ``` ┌─────────────────────────────────────────────────────────────┐ │ ✨ Design Studio │"
-  },
-  {
-    "intent": "USER GUIDE",
-    "triggers": [
-      "user",
-      "guide"
-    ],
-    "answer": "# Design Studio - User Guide ## 🚀 Getting Started ### 1. Access the Design Studio Navigate to `/professional-design` in your application. You'll see:"
-  },
-  {
-    "intent": "VISUAL ARCHITECTURE",
-    "triggers": [
-      "visual",
-      "architecture"
-    ],
-    "answer": "# 🎨 Visual Architecture - How 1M+ Unique Designs Work ## System Overview ``` ┌─────────────────────────────┐ │ User Generates Design │ └──────────────┬──────────────┘"
-  },
-  {
     "intent": "Page: /",
     "triggers": [],
     "answer": "This route corresponds to /. Open the / page in the site to view content."
@@ -822,6 +314,122 @@
       "contributors"
     ],
     "answer": "This route corresponds to admin/contributors. Open the admin/contributors page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/dashboard",
+    "triggers": [
+      "admin",
+      "dashboard"
+    ],
+    "answer": "This route corresponds to admin/dashboard. Open the admin/dashboard page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/dashboard/contributors",
+    "triggers": [
+      "admin",
+      "dashboard",
+      "contributors"
+    ],
+    "answer": "This route corresponds to admin/dashboard/contributors. Open the admin/dashboard/contributors page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/dashboard/designs",
+    "triggers": [
+      "admin",
+      "dashboard",
+      "designs"
+    ],
+    "answer": "This route corresponds to admin/dashboard/designs. Open the admin/dashboard/designs page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/dashboard/printers",
+    "triggers": [
+      "admin",
+      "dashboard",
+      "printers"
+    ],
+    "answer": "This route corresponds to admin/dashboard/printers. Open the admin/dashboard/printers page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/dashboard-modern",
+    "triggers": [
+      "admin",
+      "dashboard",
+      "modern"
+    ],
+    "answer": "This route corresponds to admin/dashboard-modern. Open the admin/dashboard-modern page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/analytics",
+    "triggers": [
+      "admin",
+      "executive",
+      "analytics"
+    ],
+    "answer": "This route corresponds to admin/executive/analytics. Open the admin/executive/analytics page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/approvals",
+    "triggers": [
+      "admin",
+      "executive",
+      "approvals"
+    ],
+    "answer": "This route corresponds to admin/executive/approvals. Open the admin/executive/approvals page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/content",
+    "triggers": [
+      "admin",
+      "executive",
+      "content"
+    ],
+    "answer": "This route corresponds to admin/executive/content. Open the admin/executive/content page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/dashboard",
+    "triggers": [
+      "admin",
+      "executive",
+      "dashboard"
+    ],
+    "answer": "This route corresponds to admin/executive/dashboard. Open the admin/executive/dashboard page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/notifications",
+    "triggers": [
+      "admin",
+      "executive",
+      "notifications"
+    ],
+    "answer": "This route corresponds to admin/executive/notifications. Open the admin/executive/notifications page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/settings",
+    "triggers": [
+      "admin",
+      "executive",
+      "settings"
+    ],
+    "answer": "This route corresponds to admin/executive/settings. Open the admin/executive/settings page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/teams",
+    "triggers": [
+      "admin",
+      "executive",
+      "teams"
+    ],
+    "answer": "This route corresponds to admin/executive/teams. Open the admin/executive/teams page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/executive/users",
+    "triggers": [
+      "admin",
+      "executive",
+      "users"
+    ],
+    "answer": "This route corresponds to admin/executive/users. Open the admin/executive/users page in the site to view content."
   },
   {
     "intent": "Page: admin/import-template",
@@ -839,6 +447,29 @@
       "printers"
     ],
     "answer": "This route corresponds to admin/printers. Open the admin/printers page in the site to view content."
+  },
+  {
+    "intent": "Page: admin/settings",
+    "triggers": [
+      "admin",
+      "settings"
+    ],
+    "answer": "This route corresponds to admin/settings. Open the admin/settings page in the site to view content."
+  },
+  {
+    "intent": "Page: agent/dashboard",
+    "triggers": [
+      "agent",
+      "dashboard"
+    ],
+    "answer": "This route corresponds to agent/dashboard. Open the agent/dashboard page in the site to view content."
+  },
+  {
+    "intent": "Page: ai",
+    "triggers": [
+      "ai"
+    ],
+    "answer": "This route corresponds to ai. Open the ai page in the site to view content."
   },
   {
     "intent": "Page: alton-designs",
@@ -975,11 +606,49 @@
     "answer": "This route corresponds to cookies. Open the cookies page in the site to view content."
   },
   {
+    "intent": "Page: debug",
+    "triggers": [
+      "debug"
+    ],
+    "answer": "This route corresponds to debug. Open the debug page in the site to view content."
+  },
+  {
     "intent": "Page: designs",
     "triggers": [
       "designs"
     ],
     "answer": "This route corresponds to designs. Open the designs page in the site to view content."
+  },
+  {
+    "intent": "Page: executive",
+    "triggers": [
+      "executive"
+    ],
+    "answer": "This route corresponds to executive. Open the executive page in the site to view content."
+  },
+  {
+    "intent": "Page: executive/analytics",
+    "triggers": [
+      "executive",
+      "analytics"
+    ],
+    "answer": "This route corresponds to executive/analytics. Open the executive/analytics page in the site to view content."
+  },
+  {
+    "intent": "Page: executive/dashboard",
+    "triggers": [
+      "executive",
+      "dashboard"
+    ],
+    "answer": "This route corresponds to executive/dashboard. Open the executive/dashboard page in the site to view content."
+  },
+  {
+    "intent": "Page: executive/teams",
+    "triggers": [
+      "executive",
+      "teams"
+    ],
+    "answer": "This route corresponds to executive/teams. Open the executive/teams page in the site to view content."
   },
   {
     "intent": "Page: help",
@@ -1152,6 +821,22 @@
     "answer": "This route corresponds to saved. Open the saved page in the site to view content."
   },
   {
+    "intent": "Page: secure-admin",
+    "triggers": [
+      "secure",
+      "admin"
+    ],
+    "answer": "This route corresponds to secure-admin. Open the secure-admin page in the site to view content."
+  },
+  {
+    "intent": "Page: secured/[slug]",
+    "triggers": [
+      "secured",
+      "slug"
+    ],
+    "answer": "This route corresponds to secured/[slug]. Open the secured/[slug] page in the site to view content."
+  },
+  {
     "intent": "Page: settings",
     "triggers": [
       "settings"
@@ -1164,6 +849,29 @@
       "studio"
     ],
     "answer": "This route corresponds to studio. Open the studio page in the site to view content."
+  },
+  {
+    "intent": "Page: support",
+    "triggers": [
+      "support"
+    ],
+    "answer": "This route corresponds to support. Open the support page in the site to view content."
+  },
+  {
+    "intent": "Page: support/dashboard",
+    "triggers": [
+      "support",
+      "dashboard"
+    ],
+    "answer": "This route corresponds to support/dashboard. Open the support/dashboard page in the site to view content."
+  },
+  {
+    "intent": "Page: support/team",
+    "triggers": [
+      "support",
+      "team"
+    ],
+    "answer": "This route corresponds to support/team. Open the support/team page in the site to view content."
   },
   {
     "intent": "Page: templates",
@@ -1194,6 +902,6 @@
       "packages",
       "project"
     ],
-    "answer": "This project lists the following dependencies: @google/generative-ai, @radix-ui/react-select, @radix-ui/react-slot, @supabase/auth-helpers-nextjs, @supabase/auth-ui-react, @supabase/auth-ui-shared, @supabase/ssr, @supabase/supabase-js, @tldraw/tldraw, class-variance-authority, clsx, fabric, framer-motion, ioredis, jspdf, lucide-react, next, react, react-dom, react-lottie-player, replicate, resend, stripe, tailwind-merge, tldraw"
+    "answer": "This project lists the following dependencies: @google/generative-ai, @radix-ui/react-select, @radix-ui/react-slot, @supabase/auth-helpers-nextjs, @supabase/auth-helpers-react, @supabase/auth-ui-react, @supabase/auth-ui-shared, @supabase/ssr, @supabase/supabase-js, @tldraw/tldraw, class-variance-authority, clsx, fabric, framer-motion, ioredis, jspdf, lucide-react, next, react, react-dom, react-lottie-player, replicate, resend, stripe, tailwind-merge, tldraw"
   }
 ]

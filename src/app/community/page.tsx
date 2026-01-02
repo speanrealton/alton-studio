@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthButton from '@/components/AuthButton';
-import { CurrencyConverter } from '@/components/CurrencyConverter';
-import type { Currency } from '@/lib/currencies';
+import CurrencyConverter from '@/components/CurrencyConverter';
+import type { CurrencyCode } from '@/lib/currencies';
 
 type Post = {
   id: string;
@@ -67,7 +67,7 @@ export default function Community() {
   const [postsPerPage, setPostsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState<'latest' | 'trending' | 'oldest'>('latest');
   const [enableNotifications, setEnableNotifications] = useState(true);
-  const [userCurrency, setUserCurrency] = useState<Currency>('USD');
+  const [userCurrency, setUserCurrency] = useState<CurrencyCode>('USD');
 
   // Dark mode
   useEffect(() => {
@@ -174,7 +174,7 @@ export default function Community() {
 
       // Load user's preferred currency
       const preferredCurrency = (user.user_metadata as any)?.preferred_currency || 'USD';
-      setUserCurrency(preferredCurrency as Currency);
+      setUserCurrency(preferredCurrency as CurrencyCode);
 
       // Fetch user's circles
       const { data: memberData } = await supabase

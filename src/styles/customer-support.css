@@ -1,0 +1,33 @@
+/* Customer Support Component Styles */
+
+@keyframes bounce-delay-1 {
+  0%, 100% {
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    transform: translateY(0);
+  }
+  50% {
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    transform: translateY(-0.5rem);
+  }
+}
+
+@keyframes bounce-delay-2 {
+  0%, 100% {
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    transform: translateY(0);
+  }
+  50% {
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    transform: translateY(-0.5rem);
+  }
+}
+
+.support-bounce-delay-1 {
+  animation: bounce-delay-1 1.4s infinite;
+  animation-delay: 0.1s;
+}
+
+.support-bounce-delay-2 {
+  animation: bounce-delay-2 1.4s infinite;
+  animation-delay: 0.2s;
+}

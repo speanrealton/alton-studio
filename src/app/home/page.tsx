@@ -412,7 +412,6 @@ export default function HomeDashboard() {
             <Link href="/marketplace" className="hover:text-white transition">Alton Feed</Link>
             <Link href="/alton-designs" className="hover:text-white transition">Alton Designs</Link>
             <Link href="/print" className="hover:text-white transition">Print Network</Link>
-            <Link href="/jobs" className="hover:text-white transition">Creator Jobs</Link>
             <Link href="/community" className="hover:text-white transition">Community</Link>
             <Link href="/contributor/apply" className="hover:text-white transition font-bold text-purple-400">Upload Your Content</Link>
           </div>

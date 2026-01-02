@@ -53,6 +53,27 @@ export default function SettingsPage() {
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [savingCurrency, setSavingCurrency] = useState(false);
 
+  // Language settings
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [savingLanguage, setSavingLanguage] = useState(false);
+
+  // Supported languages
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+    { code: 'pt', name: 'Português', flag: '🇵🇹' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
+    { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'ko', name: '한국어', flag: '🇰🇷' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
+  ];
+
   // Security settings
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [loginAlerts, setLoginAlerts] = useState(true);
@@ -84,6 +105,9 @@ export default function SettingsPage() {
 
         const preferredCurrency = (user.user_metadata as any)?.preferred_currency || 'USD';
         setSelectedCurrency(preferredCurrency);
+
+        const preferredLanguage = (user.user_metadata as any)?.preferred_language || 'en';
+        setSelectedLanguage(preferredLanguage);
 
         await fetchProfile(user.id);
       } catch (err) {
@@ -148,7 +172,8 @@ export default function SettingsPage() {
 
     try {
       // 1. Update profiles table
-      const { error: profileError } = await supabase.from('profiles').upsert(payload, { returning: 'representation' });
+      // Note: Supabase client types do not accept the `returning` option here — fetchProfile() is called below to reload data.
+      const { error: profileError } = await supabase.from('profiles').upsert(payload);
       if (profileError) throw profileError;
 
       // 2. SYNC to user_metadata (THIS IS THE KEY ADDITION)
@@ -368,6 +393,31 @@ export default function SettingsPage() {
       setMessage({ text: err.message || 'Failed to save currency preference', type: 'error' });
     } finally {
       setSavingCurrency(false);
+    }
+  };
+
+  const saveLanguagePreference = async () => {
+    if (!user) return;
+    setSavingLanguage(true);
+    setMessage(null);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          preferred_language: selectedLanguage,
+        }
+      });
+      if (error) throw error;
+      // Store language in localStorage for immediate UI update
+      localStorage.setItem('preferred_language', selectedLanguage);
+      // Dispatch custom event to notify the app about language change
+      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: selectedLanguage } }));
+      setMessage({ text: `Language preference updated to ${languages.find(l => l.code === selectedLanguage)?.name}!`, type: 'success' });
+      setShowLanguageDropdown(false);
+    } catch (err: any) {
+      console.error('saveLanguagePreference error', err);
+      setMessage({ text: err.message || 'Failed to save language preference', type: 'error' });
+    } finally {
+      setSavingLanguage(false);
     }
   };
 
@@ -682,6 +732,67 @@ export default function SettingsPage() {
                           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Change'}
                         </button>
                       </form>
+
+                      <div className="p-4 border border-white/10 rounded-lg mt-4">
+                        <div className="flex items-start gap-3">
+                          <Mail className="w-5 h-5 text-purple-400 mt-1" />
+                          <div className="flex-1">
+                            <label className="block text-sm font-semibold mb-2">Language</label>
+                            <p className="text-xs text-gray-400 mb-3">Choose your preferred language for the entire platform.</p>
+                            
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                                className="w-full sm:w-64 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition flex items-center justify-between text-left"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">{languages.find(l => l.code === selectedLanguage)?.flag}</span>
+                                  <span className="text-sm font-semibold">{languages.find(l => l.code === selectedLanguage)?.name}</span>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 transition ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+                              </button>
+
+                              {showLanguageDropdown && (
+                                <div className="absolute top-full left-0 mt-2 w-full sm:w-80 bg-gray-950 border border-white/10 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                                  <div className="p-2">
+                                    {languages.map((lang) => (
+                                      <button
+                                        key={lang.code}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedLanguage(lang.code);
+                                          setShowLanguageDropdown(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 rounded-md transition flex items-center justify-between ${
+                                          selectedLanguage === lang.code
+                                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                                            : 'hover:bg-white/5 text-gray-300'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2 flex-1">
+                                          <span className="text-lg">{lang.flag}</span>
+                                          <span className="text-sm font-semibold">{lang.name}</span>
+                                        </div>
+                                        {selectedLanguage === lang.code && <span className="text-sm">✓</span>}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              onClick={saveLanguagePreference}
+                              disabled={savingLanguage}
+                              className="mt-3 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 font-semibold text-sm inline-flex items-center gap-2"
+                            >
+                              {savingLanguage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                              {savingLanguage ? 'Saving...' : 'Save Language'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 )}

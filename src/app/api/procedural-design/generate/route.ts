@@ -50,12 +50,13 @@ function generateDesignSVG(request: ProceduralDesignRequest): string {
     case 'logo':
       return generateLogoSVG({
         companyName,
+        tagline: request.tagline || '',
         industry,
         colorPrimary,
         colorSecondary,
         style: 'random',
         imageBase64: request.imageBase64
-      });
+      })[0];
 
     case 'business_card':
       return generateBusinessCardSVG({

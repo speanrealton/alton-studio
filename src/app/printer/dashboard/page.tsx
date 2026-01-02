@@ -15,21 +15,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 export default function PrinterDashboard() {
-  const [user, setUser] = useState(null);
-  const [printer, setPrinter] = useState(null);
+  const [user, setUser] = useState<any>(null);
+  const [printer, setPrinter] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const [conversations, setConversations] = useState<any[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [quoteRequests, setQuoteRequests] = useState<any[]>([]);
-  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [quoteMessages, setQuoteMessages] = useState<any[]>([]);
   const [newQuoteMessage, setNewQuoteMessage] = useState('');
   const [quoteResponse, setQuoteResponse] = useState({ price: '', notes: '', delivery_time: '' });
@@ -37,12 +37,12 @@ export default function PrinterDashboard() {
 
   const [orders, setOrders] = useState<any[]>([]);
   const [orderFilter, setOrderFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const [portfolioImages, setPortfolioImages] = useState<any[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
-  const [portfolioUpload, setPortfolioUpload] = useState({ title: '', description: '', image: null });
-  const [selectedPortfolioImage, setSelectedPortfolioImage] = useState(null);
+  const [portfolioUpload, setPortfolioUpload] = useState<{ title: string; description: string; image: File | null }>({ title: '', description: '', image: null });
+  const [selectedPortfolioImage, setSelectedPortfolioImage] = useState<any>(null);
 
   const [stats, setStats] = useState({
     unreadMessages: 0,
@@ -52,8 +52,14 @@ export default function PrinterDashboard() {
     totalViews: 0,
     avgRating: 4.5,
     totalClients: 0,
-    conversionRate: 0
+    conversionRate: 0,
+    supportRequests: 0
   });
+
+  const [supportNotifications, setSupportNotifications] = useState<any[]>([]);
+  const [selectedSupportChat, setSelectedSupportChat] = useState<any>(null);
+  const [supportMessages, setSupportMessages] = useState<any[]>([]);
+  const [supportReply, setSupportReply] = useState('');
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -168,6 +174,28 @@ export default function PrinterDashboard() {
     }
   }, [selectedConversation]);
 
+  // Subscribe to support chat messages
+  useEffect(() => {
+    if (selectedSupportChat) {
+      const messagesChannel = supabase
+        .channel(`support-messages-${selectedSupportChat.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'support_chat_messages',
+          filter: `session_id=eq.${selectedSupportChat.id}`
+        }, (payload) => {
+          setSupportMessages(prev => [...prev, payload.new]);
+          scrollToBottom();
+        })
+        .subscribe();
+
+      return () => {
+        messagesChannel.unsubscribe();
+      };
+    }
+  }, [selectedSupportChat]);
+
   const initializeDashboard = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -194,9 +222,39 @@ export default function PrinterDashboard() {
       fetchQuoteRequests(printerData.id),
       fetchStats(printerData.id),
       fetchOrders(printerData.id),
-      fetchPortfolioImages(printerData.id)
+      fetchPortfolioImages(printerData.id),
+      fetchSupportNotifications(user.id)
     ]);
     setLoading(false);
+  };
+
+  const fetchSupportNotifications = async (userId: string) => {
+    try {
+      const { data: notifications } = await supabase
+        .from('notifications')
+        .select(`*, related_id`)
+        .eq('user_id', userId)
+        .eq('type', 'support_request')
+        .eq('read', false)
+        .order('created_at', { ascending: false });
+
+      if (notifications) {
+        const sessionIds = notifications.map(n => n.related_id);
+        
+        // Fetch the support chat sessions
+        const { data: sessions } = await supabase
+          .from('support_chat_sessions')
+          .select('*')
+          .in('id', sessionIds);
+
+        setSupportNotifications(notifications.map(notif => ({
+          ...notif,
+          session: sessions?.find(s => s.id === notif.related_id)
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching support notifications:', error);
+    }
   };
 
   const fetchConversations = async (printerId = printer?.id) => {
@@ -251,7 +309,7 @@ export default function PrinterDashboard() {
     if (allConversations) setConversations(allConversations);
   };
 
-  const fetchMessages = async (conversationId) => {
+  const fetchMessages = async (conversationId: string) => {
     // Fetch regular chat messages
     const { data: chatMessages } = await supabase
       .from('chat_messages')
@@ -270,7 +328,7 @@ export default function PrinterDashboard() {
     const allMessages = [
       ...(chatMessages || []).map(msg => ({ ...msg, type: 'chat' })),
       ...(quoteMessageData || []).map(msg => ({ ...msg, type: 'quote' }))
-    ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
     if (allMessages.length > 0) {
       setMessages(allMessages);
@@ -288,7 +346,7 @@ export default function PrinterDashboard() {
     if (data) setQuoteRequests(data);
   };
 
-  const fetchStats = async (printerId) => {
+  const fetchStats = async (printerId: string) => {
     const { data: conversations } = await supabase
       .from('conversations')
       .select('unread_count_printer')
@@ -311,7 +369,8 @@ export default function PrinterDashboard() {
       totalViews: Math.floor(Math.random() * 10000) + 1000,
       avgRating: 4.5,
       totalClients: conversations?.length || 0,
-      conversionRate: quotes?.length > 0 ? ((activeOrders / quotes.length) * 100).toFixed(1) : 0
+      conversionRate: (quotes && quotes.length > 0) ? parseFloat(((activeOrders / quotes.length) * 100).toFixed(1)) : 0,
+      supportRequests: 0
     });
   };
 
@@ -359,7 +418,7 @@ export default function PrinterDashboard() {
     }
   };
 
-  const fetchQuoteMessages = async (quoteId) => {
+  const fetchQuoteMessages = async (quoteId: string) => {
     const { data } = await supabase
       .from('quote_messages')
       .select('*')
@@ -397,7 +456,7 @@ export default function PrinterDashboard() {
     };
   }, [selectedQuote?.id]);
 
-  const sendQuoteMessage = async (quoteId) => {
+  const sendQuoteMessage = async (quoteId: string) => {
     if (!newQuoteMessage.trim() || !user) return;
 
     try {
@@ -423,7 +482,7 @@ export default function PrinterDashboard() {
     }
   };
 
-  const respondToQuote = async (quoteId) => {
+  const respondToQuote = async (quoteId: string) => {
     if (!quoteResponse.price) {
       alert('Please enter a price');
       return;
@@ -511,7 +570,90 @@ export default function PrinterDashboard() {
       alert('Quote sent successfully! The client will see your message.');
     } catch (err) {
       console.error('Exception in respondToQuote:', err);
-      alert(`Error sending quote: ${err.message || 'Unknown error'}`);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Error sending quote: ${errorMessage}`);
+    }
+  };
+
+  const handleSupportChatAction = async (sessionId: string, action: 'accept' | 'decline') => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/support-chat/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          action,
+          agentId: user.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update chat');
+      }
+
+      if (action === 'accept') {
+        // Load the chat
+        const { data: session } = await supabase
+          .from('support_chat_sessions')
+          .select('*')
+          .eq('id', sessionId)
+          .single();
+
+        if (session) {
+          setSelectedSupportChat(session);
+          
+          // Load messages
+          const { data: messages } = await supabase
+            .from('support_chat_messages')
+            .select('*')
+            .eq('session_id', sessionId)
+            .order('created_at', { ascending: true });
+
+          setSupportMessages(messages || []);
+        }
+      }
+
+      // Remove from notifications
+      setSupportNotifications(prev => 
+        prev.filter(n => n.related_id !== sessionId)
+      );
+
+      // Mark notification as read
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('related_id', sessionId)
+        .eq('type', 'support_request');
+    } catch (error) {
+      console.error('Error handling support chat action:', error);
+      alert('Failed to process your request');
+    }
+  };
+
+  const sendSupportMessage = async () => {
+    if (!supportReply.trim() || !selectedSupportChat || !user) return;
+
+    try {
+      const response = await fetch('/api/support-chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: selectedSupportChat.id,
+          message: supportReply,
+          senderId: user.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      setSupportReply('');
+    } catch (error) {
+      console.error('Error sending support message:', error);
+      alert('Failed to send message');
     }
   };
 
@@ -519,10 +661,10 @@ export default function PrinterDashboard() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const formatTime = (timestamp) => {
+  const formatTime = (timestamp: string | Date) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = now - date;
+    const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -575,6 +717,7 @@ export default function PrinterDashboard() {
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           <NavButton icon={BarChart3} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} collapsed={sidebarCollapsed} />
           <NavButton icon={MessageCircle} label="Messages" active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} collapsed={sidebarCollapsed} badge={stats.unreadMessages} />
+          <NavButton icon={MessageCircle} label="Support Chat" active={activeTab === 'support'} onClick={() => setActiveTab('support')} collapsed={sidebarCollapsed} badge={supportNotifications.length} />
           <NavButton icon={DollarSign} label="Quotes" active={activeTab === 'quotes'} onClick={() => setActiveTab('quotes')} collapsed={sidebarCollapsed} badge={stats.pendingQuotes} />
           <NavButton icon={Package} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} collapsed={sidebarCollapsed} badge={stats.activeOrders} />
           <NavButton icon={ImageIcon} label="Portfolio" active={activeTab === 'portfolio'} onClick={() => setActiveTab('portfolio')} collapsed={sidebarCollapsed} />
@@ -603,6 +746,7 @@ export default function PrinterDashboard() {
             <h1 className="text-base font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               {activeTab === 'overview' && 'Dashboard'}
               {activeTab === 'messages' && 'Messages'}
+              {activeTab === 'support' && 'Customer Support'}
               {activeTab === 'quotes' && 'Quotes'}
               {activeTab === 'orders' && 'Orders'}
               {activeTab === 'portfolio' && 'Portfolio'}
@@ -779,6 +923,107 @@ export default function PrinterDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'support' && (
+            <div className="p-4">
+              {supportNotifications.length === 0 && !selectedSupportChat ? (
+                <div className="text-center py-12">
+                  <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">No support requests</p>
+                </div>
+              ) : selectedSupportChat ? (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-white font-bold">Customer Support Chat</h3>
+                    <button
+                      onClick={() => setSelectedSupportChat(null)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {/* Messages */}
+                  <div className="bg-black/30 rounded-lg p-4 h-96 overflow-y-auto space-y-3">
+                    {supportMessages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex ${msg.sender_type === 'user' ? 'justify-start' : 'justify-end'}`}
+                      >
+                        <div
+                          className={`max-w-xs rounded-lg p-3 text-sm ${
+                            msg.sender_type === 'user'
+                              ? 'bg-white/10 text-white'
+                              : msg.sender_type === 'system'
+                              ? 'bg-purple-600/20 text-purple-200'
+                              : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                          }`}
+                        >
+                          <p>{msg.message}</p>
+                          <p className="text-xs opacity-50 mt-1">
+                            {new Date(msg.created_at).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={supportReply}
+                      onChange={(e) => setSupportReply(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && sendSupportMessage()}
+                      placeholder="Type your response..."
+                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    />
+                    <button
+                      onClick={sendSupportMessage}
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <h3 className="text-white font-bold mb-4">Pending Support Requests</h3>
+                  {supportNotifications.map(notif => (
+                    <div
+                      key={notif.id}
+                      className="bg-white/5 border border-white/10 rounded-lg p-4"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="text-white font-semibold">{notif.title}</h4>
+                          <p className="text-gray-400 text-sm">{notif.message}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(notif.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSupportChatAction(notif.related_id, 'accept')}
+                          className="flex-1 px-3 py-2 bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-lg transition text-sm font-semibold"
+                        >
+                          Accept Chat
+                        </button>
+                        <button
+                          onClick={() => handleSupportChatAction(notif.related_id, 'decline')}
+                          className="flex-1 px-3 py-2 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-lg transition text-sm font-semibold"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -1321,7 +1566,8 @@ export default function PrinterDashboard() {
                                   alert('Work added to portfolio!');
                                 } catch (error) {
                                   console.error('Portfolio upload error:', error);
-                                  alert(`Error uploading: ${error.message || 'Unknown error'}`);
+                                  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                                  alert(`Error uploading: ${errorMessage}`);
                                 } finally {
                                   setPortfolioLoading(false);
                                 }
@@ -1409,7 +1655,8 @@ export default function PrinterDashboard() {
                                     setSelectedPortfolioImage(null);
                                     alert('Portfolio item deleted');
                                   } catch (error) {
-                                    alert(`Error deleting: ${error.message}`);
+                                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                                    alert(`Error deleting: ${errorMessage}`);
                                   }
                                 }
                               }}
@@ -1472,7 +1719,7 @@ export default function PrinterDashboard() {
   );
 }
 
-function CompactStatCard({ icon: Icon, label, value, change, positive, color }) {
+function CompactStatCard({ icon: Icon, label, value, change, positive, color }: any) {
   return (
     <div className="bg-white/5 border border-white/10 rounded-xl p-3 hover:border-purple-500/50 transition">
       <div className="flex items-start justify-between mb-2">
@@ -1489,7 +1736,7 @@ function CompactStatCard({ icon: Icon, label, value, change, positive, color }) 
   );
 }
 
-function QuickActionCard({ icon: Icon, title, description, onClick, gradient, iconColor }) {
+function QuickActionCard({ icon: Icon, title, description, onClick, gradient, iconColor }: any) {
   return (
     <button onClick={onClick} className={`bg-gradient-to-br ${gradient} border border-white/10 rounded-xl p-3 text-left hover:scale-105 transition group w-full`}>
       <Icon className={`w-6 h-6 ${iconColor} mb-2 group-hover:scale-110 transition`} />
@@ -1499,7 +1746,7 @@ function QuickActionCard({ icon: Icon, title, description, onClick, gradient, ic
   );
 }
 
-function NavButton({ icon: Icon, label, active, onClick, collapsed, badge }) {
+function NavButton({ icon: Icon, label, active, onClick, collapsed, badge = 0 }: any) {
   return (
     <button onClick={onClick} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg font-medium transition text-xs ${
         active ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'

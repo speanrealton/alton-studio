@@ -50,16 +50,42 @@ class StorageAdapter {
         return { key, value, shared };
       } catch (error) {
         if ((error as any).name === 'QuotaExceededError') {
-          console.error('localStorage quota exceeded, attempting cleanup...');
-          // Try to free up space by removing thumbnails
+          console.error('localStorage quota exceeded, attempting aggressive cleanup...');
+          // Try cleanup multiple times
           this.cleanupThumbnails();
-          try {
-            localStorage.setItem(key, value);
-            return { key, value, shared };
-          } catch (retryError) {
-            console.error('localStorage still full after cleanup:', retryError);
-            return null;
-          }
+          
+          // Wait a brief moment and retry
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              try {
+                localStorage.setItem(key, value);
+                resolve({ key, value, shared });
+              } catch (retryError) {
+                console.error('localStorage still full after cleanup, trying to save without full data');
+                // If still failing, try to save only essential metadata
+                if (key === 'user-designs' && typeof value === 'string') {
+                  try {
+                    const data = JSON.parse(value);
+                    if (Array.isArray(data)) {
+                      // Remove large fields before saving
+                      const minimalData = data.map((item: any) => ({
+                        id: item.id,
+                        name: item.name,
+                        lastModified: item.lastModified
+                      }));
+                      localStorage.setItem(key, JSON.stringify(minimalData));
+                      resolve({ key, value: JSON.stringify(minimalData), shared });
+                    }
+                  } catch (e) {
+                    console.error('Failed to save minimal data:', e);
+                    resolve(null);
+                  }
+                } else {
+                  resolve(null);
+                }
+              }
+            }, 100);
+          });
         }
         console.error('localStorage error:', error);
         return null;
@@ -69,25 +95,68 @@ class StorageAdapter {
 
   private cleanupThumbnails(): void {
     try {
+      // Remove ALL old/temporary data first
+      const keysToRemove = [
+        'collaboration-state', 
+        'temp-canvas', 
+        'chat-history', 
+        'undo-history',
+        'redo-history',
+        'drawing-state',
+        'page-state'
+      ];
+      for (const key of keysToRemove) {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          // Ignore individual removal errors
+        }
+      }
+
+      // Aggressively clean up designs
       const designsData = localStorage.getItem('user-designs');
-      if (!designsData) return;
+      if (designsData) {
+        try {
+          const designs = JSON.parse(designsData);
+          if (Array.isArray(designs)) {
+            // Keep only 2 most recent designs - minimal metadata only
+            const cleanedDesigns = designs
+              .sort((a: any, b: any) => 
+                new Date(b.lastModified || 0).getTime() - new Date(a.lastModified || 0).getTime()
+              )
+              .slice(0, 2)
+              .map((design: any) => ({
+                id: design.id,
+                name: design.name,
+                lastModified: design.lastModified
+              }));
 
-      const designs = JSON.parse(designsData);
-      if (!Array.isArray(designs)) return;
+            localStorage.setItem('user-designs', JSON.stringify(cleanedDesigns));
+            console.log(`Cleaned up designs: kept 2 most recent, removed all large data`);
+          }
+        } catch (e) {
+          console.error('Error parsing designs:', e);
+          try {
+            localStorage.removeItem('user-designs');
+          } catch (removeError) {
+            // Ignore
+          }
+        }
+      }
 
-      // Remove thumbnails and keep only the 10 most recent designs
-      const designsWithoutThumbnails = designs
-        .sort((a: any, b: any) => 
-          new Date(b.lastModified || 0).getTime() - new Date(a.lastModified || 0).getTime()
-        )
-        .slice(0, 10)
-        .map((design: any) => ({
-          ...design,
-          thumbnail: '' // Remove thumbnail to save space
-        }));
+      // Remove all cache-like keys
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('cache') || key.includes('temp') || key.includes('draft'))) {
+          try {
+            localStorage.removeItem(key);
+          } catch (e) {
+            // Ignore
+          }
+        }
+      }
 
-      localStorage.setItem('user-designs', JSON.stringify(designsWithoutThumbnails));
-      console.log(`Cleaned up designs: kept 10 most recent, removed thumbnails`);
+      console.log('Storage cleanup completed');
     } catch (cleanupError) {
       console.error('Error during cleanup:', cleanupError);
     }

@@ -84,7 +84,7 @@ export default function Onboarding() {
 
           {current.type === "multi" && (
             <div className="space-y-3">
-              {current.options.map((opt) => (
+              {current.options?.map((opt) => (
                 <label key={opt} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10">
                   <input
                     type="checkbox"
@@ -103,7 +103,7 @@ export default function Onboarding() {
 
           {current.type === "single" && (
             <div className="grid grid-cols-2 gap-4">
-              {current.options.map((opt) => (
+              {current.options?.map((opt: any) => (
                 <button
                   key={opt}
                   onClick={() => setAnswers({ ...answers, [step === 1 ? 'preferred_style' : 'location']: opt })}

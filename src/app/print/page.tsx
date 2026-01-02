@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useLanguageContext } from '@/providers/LanguageProvider';
+import { User } from '@supabase/supabase-js';
 import { 
   Search, MapPin, Star, BadgeCheck, Leaf, Clock, DollarSign, Heart, 
   MessageCircle, Filter, Grid3x3, List, Sparkles, Phone, Mail, Globe, 
@@ -16,18 +18,20 @@ import Image from 'next/image';
 import ChatSystem from '@/components/ChatSystem';
 import GeoLocationSearch from '@/components/GeoLocationSearch';
 
-const categories = [
-  { id: 'tshirt', label: 'T-Shirts', icon: '👕' },
-  { id: 'business-card', label: 'Business Cards', icon: '💼' },
-  { id: 'poster', label: 'Posters', icon: '🎨' },
-  { id: 'canvas', label: 'Canvas', icon: '🖼️' },
-  { id: 'packaging', label: 'Packaging', icon: '📦' },
-  { id: 'promotional', label: 'Promotional', icon: '🎁' },
-  { id: 'large-format', label: 'Large Format', icon: '📐' },
-  { id: '3d-printing', label: '3D Print', icon: '🔮' }
+const categoriesConfig = [
+  { id: 'tshirt', labelKey: 'category.tshirt', icon: '👕' },
+  { id: 'business-card', labelKey: 'category.businesscard', icon: '💼' },
+  { id: 'poster', labelKey: 'category.poster', icon: '🎨' },
+  { id: 'canvas', labelKey: 'category.canvas', icon: '🖼️' },
+  { id: 'packaging', labelKey: 'category.packaging', icon: '📦' },
+  { id: 'promotional', labelKey: 'category.promotional', icon: '🎁' },
+  { id: 'large-format', labelKey: 'category.largeformat', icon: '📐' },
+  { id: '3d-printing', labelKey: 'category.3dprinting', icon: '🔮' }
 ];
 
 export default function PrintNetwork() {
+  const { t } = useLanguageContext();
+  const [categories, setCategories] = useState<any[]>([]);
   const [printers, setPrinters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,32 +41,41 @@ export default function PrintNetwork() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedPrinter, setSelectedPrinter] = useState(null);
+  const [selectedPrinter, setSelectedPrinter] = useState<any>(null);
   const [favorites, setFavorites] = useState<any[]>([]);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [countries, setCountries] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, countries: 0, prints: 0 });
   const [quoteForm, setQuoteForm] = useState({ show: false, printerId: null });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showQuotesModal, setShowQuotesModal] = useState(false);
   const [quoteConversations, setQuoteConversations] = useState<any[]>([]);
-  const [selectedQuoteConv, setSelectedQuoteConv] = useState(null);
-  const [quoteMessages, setQuoteMessages] = useState([]);
+  const [selectedQuoteConv, setSelectedQuoteConv] = useState<any>(null);
+  const [quoteMessages, setQuoteMessages] = useState<any[]>([]);
   const [newQuoteMessage, setNewQuoteMessage] = useState('');
   const [loadingQuotes, setLoadingQuotes] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingForm, setRatingForm] = useState({ rating: 5, title: '', review: '' });
-  const [printerRatings, setPrinterRatings] = useState({});
+  const [printerRatings, setPrinterRatings] = useState<{ [key: string]: any[] }>({});
   const [userRatings, setUserRatings] = useState({});
 
   const navItems = [
-    { label: 'Studio', href: '/studio' },
-    { label: 'Alton Feed', href: '/marketplace' },
-    { label: 'Community', href: '/community' },
-    { label: 'Alton Designs', href: '/alton-designs' },
-    { label: 'Print', href: '/print' }
+    { labelKey: 'nav.studio', href: '/studio' },
+    { labelKey: 'nav.marketplace', href: '/marketplace' },
+    { labelKey: 'nav.community', href: '/community' },
+    { labelKey: 'nav.designs', href: '/alton-designs' },
+    { labelKey: 'nav.print', href: '/print' }
   ];
+
+  // Initialize categories with translations
+  useEffect(() => {
+    const translatedCategories = categoriesConfig.map(cat => ({
+      ...cat,
+      label: t(cat.labelKey)
+    }));
+    setCategories(translatedCategories);
+  }, [t]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
@@ -182,45 +195,55 @@ export default function PrintNetwork() {
   }, [user]);
 
   const fetchPrinters = async () => {
-    setLoading(true);
-    let query = supabase
-      .from('printers')
-      .select(`*, printer_services(id, service_name, category, starting_price, currency), portfolio_images(id, image_url, title)`)
-      .eq('status', 'approved');
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('printers')
+        .select(`*, printer_services(id, service_name, category, starting_price, currency), portfolio_images(id, image_url, title)`)
+        .eq('status', 'approved');
 
-    if (searchQuery) {
-      query = query.or(`company_name.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,country.ilike.%${searchQuery}%`);
-    }
-    if (selectedCountry) { query = query.eq('country', selectedCountry); }
-    if (minRating > 0) { query = query.gte('rating', minRating); }
-    if (verifiedOnly) { query = query.eq('verified', true); }
-
-    const { data, error } = await query.order('rating', { ascending: false });
-
-    if (!error && data) {
-      let filtered = data;
-      if (selectedCategory) {
-        filtered = data.filter(p => p.printer_services?.some(s => s.category === selectedCategory));
+      if (searchQuery) {
+        query = query.or(`company_name.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,country.ilike.%${searchQuery}%`);
       }
-      setPrinters(filtered);
-      const uniqueCountries = new Set(data.map(p => p.country));
-      setCountries([...uniqueCountries].sort());
-      setStats({ total: data.length, countries: uniqueCountries.size, prints: Math.floor(Math.random() * 50000000) + 10000000 });
-      
-      // Fetch ratings for all printers
-      filtered.forEach(printer => {
-        if (printer.id) fetchPrinterRatings(printer.id);
-      });
+      if (selectedCountry) { query = query.eq('country', selectedCountry); }
+      if (minRating > 0) { query = query.gte('rating', minRating); }
+      if (verifiedOnly) { query = query.eq('verified', true); }
+
+      const { data, error } = await query.order('rating', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching printers:', error);
+        setPrinters([]);
+      } else if (data) {
+        let filtered = data;
+        if (selectedCategory) {
+          filtered = data.filter(p => p.printer_services?.some((s: any) => s.category === selectedCategory));
+        }
+        setPrinters(filtered);
+        const uniqueCountries = new Set(data.map(p => p.country));
+        setCountries([...uniqueCountries].sort());
+        setStats({ total: data.length, countries: uniqueCountries.size, prints: Math.floor(Math.random() * 50000000) + 10000000 });
+        
+        // Fetch ratings for all printers
+        filtered.forEach(printer => {
+          if (printer.id) fetchPrinterRatings(printer.id);
+        });
+      }
+    } catch (error) {
+      console.error('Exception fetching printers:', error);
+      setPrinters([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchFavorites = async () => {
+    if (!user) return;
     const { data } = await supabase.from('printer_favorites').select('printer_id').eq('user_id', user.id);
     if (data) { setFavorites(data.map(f => f.printer_id)); }
   };
 
-  const fetchPrinterRatings = async (printerId) => {
+  const fetchPrinterRatings = async (printerId: string) => {
     const { data } = await supabase
       .from('printer_ratings')
       .select('*')
@@ -231,10 +254,10 @@ export default function PrintNetwork() {
       setPrinterRatings(prev => ({ ...prev, [printerId]: data }));
       
       // Calculate average rating
-      const avg = data.length > 0 ? (data.reduce((sum, r) => sum + r.rating, 0) / data.length).toFixed(1) : 0;
+      const avg = data.length > 0 ? parseFloat((data.reduce((sum, r) => sum + r.rating, 0) / data.length).toFixed(1)) : 0;
       
       // Update printer's rating and review count in real-time
-      setPrinters(prev => prev.map(p => p.id === printerId ? { ...p, rating: parseFloat(avg), review_count: data.length } : p));
+      setPrinters(prev => prev.map(p => p.id === printerId ? { ...p, rating: avg, review_count: data.length } : p));
       
       // Check if user has already rated
       if (user) {
@@ -247,7 +270,7 @@ export default function PrintNetwork() {
     return { average: 0, count: 0, reviews: [] };
   };
 
-  const submitRating = async (printerId) => {
+  const submitRating = async (printerId: string) => {
     if (!user) {
       alert('Please sign in to rate');
       return;
@@ -330,7 +353,7 @@ export default function PrintNetwork() {
     setLoadingQuotes(false);
   };
 
-  const fetchQuoteMessages = async (quoteId) => {
+  const fetchQuoteMessages = async (quoteId: string) => {
     const { data } = await supabase
       .from('quote_messages')
       .select('*')
@@ -368,7 +391,7 @@ export default function PrintNetwork() {
     };
   }, [selectedQuoteConv?.id]);
 
-  const sendQuoteMessage = async (quoteId) => {
+  const sendQuoteMessage = async (quoteId: string) => {
     if (!newQuoteMessage.trim() || !user) return;
 
     try {
@@ -383,7 +406,6 @@ export default function PrintNetwork() {
         console.error('Supabase error details:', { 
           message: error.message, 
           code: error.code,
-          status: error.status,
           fullError: error 
         });
         alert(`Failed to send message: ${error.message || 'Unknown error'}`);
@@ -398,7 +420,7 @@ export default function PrintNetwork() {
     }
   };
 
-  const toggleFavorite = async (printerId) => {
+  const toggleFavorite = async (printerId: string) => {
     if (!user) { alert('Please sign in to save favorites'); return; }
     const isFavorite = favorites.includes(printerId);
     if (isFavorite) {
@@ -410,7 +432,7 @@ export default function PrintNetwork() {
     }
   };
 
-  const submitQuoteRequest = async (e) => {
+  const submitQuoteRequest = async (e: any) => {
     e.preventDefault();
     if (!user) { alert('Please sign in to request quotes'); return; }
     const formData = new FormData(e.target);
@@ -418,9 +440,9 @@ export default function PrintNetwork() {
     const { data: quoteData, error: quoteError } = await supabase.from('quote_requests').insert({
       printer_id: quoteForm.printerId,
       user_id: user.id,
-      service_type: formData.get('service_type'),
-      quantity: parseInt(formData.get('quantity')),
-      description: formData.get('description')
+      service_type: formData.get('service_type') as string,
+      quantity: parseInt(formData.get('quantity') as string),
+      description: formData.get('description') as string
     }).select().single();
 
     if (!quoteError && quoteData) {
@@ -438,7 +460,7 @@ export default function PrintNetwork() {
     }
   };
 
-  const handleNearbyPrinters = (nearbyPrinters) => {
+  const handleNearbyPrinters = (nearbyPrinters: any[]) => {
     if (nearbyPrinters && nearbyPrinters.length > 0) {
       setPrinters(nearbyPrinters);
       alert(`Found ${nearbyPrinters.length} printers near you!`);
@@ -465,7 +487,7 @@ export default function PrintNetwork() {
           </Link>
           <div className="hidden lg:flex items-center gap-6 text-sm font-medium">
             {navItems.map((item) => (
-              <Link key={item.label} href={item.href} className="text-gray-400 hover:text-white transition">{item.label}</Link>
+              <Link key={item.labelKey} href={item.href} className="text-gray-400 hover:text-white transition">{t(item.labelKey)}</Link>
             ))}
             <Link href="/home" className="text-purple-400 hover:text-purple-300 transition font-semibold">More</Link>
           </div>
@@ -535,8 +557,8 @@ export default function PrintNetwork() {
                 </div>
                 <div className="p-4 space-y-1">
                   {navItems.map((item) => (
-                    <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
-                      <ArrowRight className="w-4 h-4 text-purple-400" /><span className="text-sm font-medium">{item.label}</span>
+                    <Link key={item.labelKey} href={item.href} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
+                      <ArrowRight className="w-4 h-4 text-purple-400" /><span className="text-sm font-medium">{t(item.labelKey)}</span>
                     </Link>
                   ))}
                 </div>
@@ -567,7 +589,7 @@ export default function PrintNetwork() {
               Connect with {stats.total}+ verified printing companies across {stats.countries}+ countries
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <GeoLocationSearch onLocationFound={handleNearbyPrinters} />
+              <GeoLocationSearch />
               <Link href="#printers"><button className="px-5 py-2.5 bg-white/10 border border-white/10 hover:bg-white/20 rounded-lg text-sm font-semibold flex items-center gap-2"><Search className="w-4 h-4" />Browse All</button></Link>
             </div>
           </motion.div>
@@ -841,7 +863,7 @@ export default function PrintNetwork() {
                       <div className="mb-6">
                         <h3 className="text-lg font-bold text-white mb-3">Services</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {selectedPrinter.printer_services.map(service => (
+                          {selectedPrinter.printer_services.map((service: any) => (
                             <div key={service.id} className="bg-white/5 border border-white/10 rounded-lg p-3">
                               <div className="flex justify-between items-start mb-1">
                                 <h4 className="font-bold text-white text-sm">{service.service_name}</h4>
@@ -858,7 +880,7 @@ export default function PrintNetwork() {
                       <div className="mb-6">
                         <h3 className="text-lg font-bold text-white mb-3">Portfolio</h3>
                         <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                          {selectedPrinter.portfolio_images.map(item => (
+                          {selectedPrinter.portfolio_images.map((item: any) => (
                             <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-white/5 border border-white/10 group">
                               <img src={item.image_url} alt={item.title || 'Portfolio'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             </div>

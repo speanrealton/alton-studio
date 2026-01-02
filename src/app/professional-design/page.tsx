@@ -1289,9 +1289,6 @@ const nav = [
               <Link href="/print" className={`transition ${
                 isDarkMode ? 'hover:text-white' : 'hover:text-black'
               }`}>Print Network</Link>
-              <Link href="/jobs" className={`transition ${
-                isDarkMode ? 'hover:text-white' : 'hover:text-black'
-              }`}>Creator Jobs</Link>
               <Link href="/community" className={`transition ${
                 isDarkMode ? 'hover:text-white' : 'hover:text-black'
               }`}>Community</Link>

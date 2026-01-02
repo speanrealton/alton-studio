@@ -88,9 +88,9 @@ export async function POST(req: Request) {
     
     console.log('Candidate models after filtering:', candidateModels, 'excludePaidModels:', excludePaidModels);
 
-    let createRes = null;
-    let usedModel = null;
-    let usedVersionId = null;
+    let createRes: Response | null = null;
+    let usedModel: string | null = null;
+    let usedVersionId: string | null = null;
 
     const triedModels: any[] = [];
     // Filter out models that are in the transient failure cache unless explicitly chosen by the user

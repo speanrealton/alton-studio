@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import * as fabric from 'fabric';
 import { storage } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
@@ -18,7 +19,8 @@ import {
   PlusCircle, FileText, Settings, Maximize2, PaintBucket, Filter, Sun, Crop,
   Contrast, Blend, Pentagon, Hexagon, ImagePlus, Group, Ungroup, Magnet,
   MousePointer, Eye, EyeOff, Move, Eraser, Droplet, Strikethrough,
-  AlignJustify, MoreHorizontal, Edit3, Sparkle, SaveAll, Plus, MessageCircle, Send, ChevronRight
+  AlignJustify, MoreHorizontal, Edit3, Sparkle, SaveAll, Plus, MessageCircle, Send, ChevronRight,
+  Mic, MicOff, Square as SquareIcon, Play, Trash
 } from 'lucide-react';
 
 const PROFESSIONAL_FONTS = [
@@ -83,16 +85,17 @@ export default function StudioPage() {
   const [snapGuides, setSnapGuides] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgTemplateInputRef = useRef<HTMLInputElement>(null);
-  const canvasInstancesRef = useRef({});
+  const canvasInstancesRef = useRef<Record<number, fabric.Canvas | null>>({});
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const historyRef = useRef<Array<any>>([]);
   const historyIndexRef = useRef<number>(-1);
+  const selectionModeRef = useRef(true);
   
   // State declarations MUST come before useEffects that reference them
   const [history, setHistory] = useState<any[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   
-  const [pages, setPages] = useState<Array<{ id: number; canvas: fabric.Canvas | null; name: string; data: unknown }>>([{ id: 1, canvas: null, name: 'Page 1', data: null }]);
+  const [pages, setPages] = useState<Array<{ id: number; canvas: fabric.Canvas | null; name: string; data: any; history?: any; historyIndex?: number }>>([{ id: 1, canvas: null, name: 'Page 1', data: null }]);
   // Keep a ref to pages so asynchronous callbacks always read latest pages
   const pagesRef = useRef(pages);
 
@@ -102,6 +105,7 @@ export default function StudioPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     pagesRef.current = pages;
+    console.log(`PagesRef synced: ${pages.length} pages, pages with data: ${pages.filter((p: any) => !!p.data).length}`);
   }, [pages]);
 
   // Sync history state with refs whenever it changes
@@ -109,6 +113,20 @@ export default function StudioPage() {
     historyRef.current = history;
     historyIndexRef.current = historyIndex;
   }, [history, historyIndex]);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+        setContextMenu(null);
+      }
+      if (canvasContextMenuRef.current && !canvasContextMenuRef.current.contains(event.target as Node)) {
+        setCanvasContextMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // All state declarations - MUST come before functions that use them
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -119,12 +137,12 @@ export default function StudioPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedSize, setSelectedSize] = useState('A4 Portrait');
+  const [selectedSize, setSelectedSize] = useState<keyof typeof PAGE_SIZES>('A4 Portrait');
   const [customWidth, setCustomWidth] = useState(800);
   const [customHeight, setCustomHeight] = useState(600);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showAddPageModal, setShowAddPageModal] = useState(false);
-  const [templateData, setTemplateData] = useState<unknown>(null);
+  const [templateData, setTemplateData] = useState<{ id?: string; name?: string; size?: { width: number; height: number }; data?: any } | null>(null);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
   const [loadingDesign, setLoadingDesign] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -150,13 +168,16 @@ export default function StudioPage() {
   const [contrast, setContrast] = useState(0);
   const [saturation, setSaturation] = useState(0);
   const [blur, setBlur] = useState(0);
+  const [showGradientEditor, setShowGradientEditor] = useState(false);
+  const [gradientColors, setGradientColors] = useState(['#3b82f6', '#8b5cf6']);
+  const [gradientAngle, setGradientAngle] = useState(0);
   const [gradientStart, setGradientStart] = useState('#3b82f6');
   const [gradientEnd, setGradientEnd] = useState('#8b5cf6');
   const [shadowColor, setShadowColor] = useState('#000000');
   const [shadowBlur, setShadowBlur] = useState(0);
   const [shadowOffsetX, setShadowOffsetX] = useState(0);
   const [shadowOffsetY, setShadowOffsetY] = useState(0);
-  const [gridVisible, setGridVisible] = useState(true);
+  const [gridVisible, setGridVisible] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [lineHeight, setLineHeight] = useState(1.16);
@@ -179,13 +200,25 @@ export default function StudioPage() {
   const [collaborationCode, setCollaborationCode] = useState('');
   const [collaboratorsList, setCollaboratorsList] = useState<Array<any>>([]);
   const [isCollaborating, setIsCollaborating] = useState(false);
-  const [chatMessages, setChatMessages] = useState<Array<{id: string; user: string; message: string; timestamp: number; color: string}>>([]);
+  const [chatMessages, setChatMessages] = useState<Array<{id: string; user: string; message: string; timestamp: number; color: string; audioUrl?: string; replyingToUser?: string}>>([]);
   const [chatInput, setChatInput] = useState('');
+  const [replyingTo, setReplyingTo] = useState<{ id: string; user: string } | null>(null);
   const [showChatSidebar, setShowChatSidebar] = useState(true);
+  const [chatMinimized, setChatMinimized] = useState(false);
   const [spaceDown, setSpaceDown] = useState(false);
   const [userUsername, setUserUsername] = useState<string>('Guest');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const websocketRef = useRef<WebSocket | null>(null);
   const lastSyncRef = useRef<number>(0);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; messageId: string; isOwn: boolean } | null>(null);
+  const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+  const canvasContextMenuRef = useRef<HTMLDivElement>(null);
+  const clipboardRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<HTMLDivElement | null>(null);
   const isPanning = useRef(false);
@@ -194,6 +227,11 @@ export default function StudioPage() {
   const messagesChannelRef = useRef<any>(null);
   const canvasChannelRef = useRef<any>(null);
   const currentUserRef = useRef<string>('User-' + Math.random().toString(36).substring(7));
+
+  // Keep selectionModeRef in sync whenever selectionMode changes
+  useEffect(() => {
+    selectionModeRef.current = selectionMode;
+  }, [selectionMode]);
 
   // Collaborative editing functions
   const generateCollaborationCode = () => {
@@ -213,7 +251,12 @@ export default function StudioPage() {
 
     // Subscribe to messages
     const messagesChannel = subscribeToMessages(code, (message) => {
-      setChatMessages((prev) => [...prev, message]);
+      if (message.message.startsWith('deleted_')) {
+        const deletedMessageId = message.message.split('_')[1];
+        setChatMessages((prev) => prev.filter(msg => msg.id !== deletedMessageId));
+      } else {
+        setChatMessages((prev) => [...prev, message]);
+      }
     });
     messagesChannelRef.current = messagesChannel;
 
@@ -254,7 +297,12 @@ export default function StudioPage() {
 
     // Subscribe to messages
     const messagesChannel = subscribeToMessages(code, (message) => {
-      setChatMessages((prev) => [...prev, message]);
+      if (message.message.startsWith('deleted_')) {
+        const deletedMessageId = message.message.split('_')[1];
+        setChatMessages((prev) => prev.filter(msg => msg.id !== deletedMessageId));
+      } else {
+        setChatMessages((prev) => [...prev, message]);
+      }
     });
     messagesChannelRef.current = messagesChannel;
 
@@ -289,8 +337,15 @@ export default function StudioPage() {
     lastSyncRef.current = now;
     
     try {
-      await broadcastCanvasUpdate(collaborationCode, data, currentUserRef.current);
-      console.log('Canvas change broadcasted');
+      // Send full canvas JSON with proper formatting
+      const fullCanvasData = {
+        objects: data.objects || [],
+        background: data.background || 'transparent',
+        width: data.width || 1200,
+        height: data.height || 800,
+      };
+      await broadcastCanvasUpdate(collaborationCode, fullCanvasData, currentUserRef.current);
+      console.log('Canvas change broadcasted:', fullCanvasData);
     } catch (error) {
       console.error('Failed to broadcast canvas change:', error);
     }
@@ -303,7 +358,7 @@ export default function StudioPage() {
     // Host (first to join) gets blue, guests get green
     const userColor = collaboratorsList.length === 1 ? '#3b82f6' : '#10b981';
     
-    const newMessage = {
+    const newMessage: any = {
       id: Date.now().toString(),
       sessionCode: collaborationCode,
       user: userUsername,
@@ -311,6 +366,11 @@ export default function StudioPage() {
       timestamp: Date.now(),
       color: userColor,
     };
+
+    // Add reply context if replying to someone
+    if (replyingTo) {
+      newMessage.replyingToUser = replyingTo.user;
+    }
 
     setChatMessages((prev) => [...prev, newMessage]);
     setChatInput('');
@@ -323,16 +383,227 @@ export default function StudioPage() {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      // Check for browser support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Audio recording is not supported in your browser. Please use Chrome, Firefox, Safari, or Edge.');
+        return;
+      }
+
+      console.log('Attempting to access microphone...');
+      
+      // First attempt: Try with optimized constraints for Bluetooth
+      let stream: MediaStream | null = null;
+      let useBasicConstraints = false;
+
+      try {
+        const optimizedConstraints = {
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+            sampleRate: 48000,
+          },
+          video: false,
+        };
+
+        console.log('Requesting microphone with optimized constraints...');
+        stream = await navigator.mediaDevices.getUserMedia(optimizedConstraints);
+      } catch (error: any) {
+        console.warn('Optimized constraints failed, trying basic constraints:', error.name);
+        
+        // Fallback: Try with basic constraints
+        try {
+          const basicConstraints = {
+            audio: true,
+            video: false,
+          };
+          
+          console.log('Requesting microphone with basic constraints...');
+          stream = await navigator.mediaDevices.getUserMedia(basicConstraints);
+          useBasicConstraints = true;
+        } catch (basicError: any) {
+          throw basicError;
+        }
+      }
+      
+      // Check if stream has audio tracks
+      if (!stream || stream.getAudioTracks().length === 0) {
+        alert('No audio input device found. Please check your microphone connection.');
+        return;
+      }
+
+      const audioTrack = stream.getAudioTracks()[0];
+      console.log('Microphone accessed successfully:', {
+        label: audioTrack.label,
+        enabled: audioTrack.enabled,
+        readyState: audioTrack.readyState,
+        settings: audioTrack.getSettings(),
+      });
+
+      // Determine MIME type based on browser support
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = '';
+          }
+        }
+      }
+
+      console.log('Using MIME type:', mimeType);
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: mimeType || undefined,
+        audioBitsPerSecond: 128000,
+      });
+      
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        console.log('Audio data available, size:', event.data.size);
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event.error);
+        alert(`Recording error: ${event.error}`);
+        setIsRecording(false);
+        stream?.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.onstop = async () => {
+        console.log('Recording stopped, total chunks:', audioChunksRef.current.length);
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
+          console.log('Audio blob created, size:', audioBlob.size);
+          await sendAudioMessage(audioBlob);
+        } else {
+          alert('No audio was recorded. Please try again.');
+        }
+        // Stop all audio tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+      setRecordingTime(0);
+      
+      // Timer for recording duration
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      console.log('Recording started successfully');
+    } catch (error: any) {
+      console.error('Failed to start recording:', error);
+      
+      // Specific error handling for common issues
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        alert('Microphone permission denied. Allow in browser settings and refresh.');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        alert('No microphone found. Check your Bluetooth connection.');
+      } else if (error.name === 'NotReadableError') {
+        alert('Microphone in use. Close other apps and try again.');
+      } else if (error.name === 'SecurityError') {
+        alert('Microphone blocked by security settings.');
+      } else if (error.name === 'TypeError') {
+        alert('Microphone config error. Refresh and try again.');
+      } else {
+        alert(`Microphone error: ${error.message || error.name}`);
+      }
+      
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      console.log('Recording stopped');
+    }
+  };
+
+  const sendAudioMessage = async (audioBlob: Blob) => {
+    if (!isCollaborating) return;
+    
+    try {
+      // Convert blob to base64 for transmission
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = reader.result as string;
+        const userColor = collaboratorsList.length === 1 ? '#3b82f6' : '#10b981';
+        
+        const audioMessage = {
+          id: Date.now().toString(),
+          sessionCode: collaborationCode,
+          user: userUsername,
+          message: '🎙️ Voice Message',
+          timestamp: Date.now(),
+          color: userColor,
+          audioUrl: base64Audio,
+        };
+        
+        setChatMessages((prev) => [...prev, audioMessage]);
+        await broadcastChatMessage(collaborationCode, audioMessage);
+        console.log('Audio message sent');
+      };
+      reader.readAsDataURL(audioBlob);
+    } catch (error) {
+      console.error('Failed to send audio message:', error);
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    // Remove from local messages
+    setChatMessages((prev) => prev.filter(msg => msg.id !== messageId));
+    
+    // Broadcast deletion to other users
+    try {
+      const deleteNotification = {
+        id: Date.now().toString(),
+        sessionCode: collaborationCode,
+        user: userUsername,
+        message: `deleted_${messageId}`,
+        timestamp: Date.now(),
+        color: '#ff0000',
+      };
+      await broadcastChatMessage(collaborationCode, deleteNotification);
+      console.log('Message deleted');
+    } catch (error) {
+      console.error('Failed to broadcast deletion:', error);
+    }
+  };
+
   // Apply remote canvas updates from other collaborators
   const applyRemoteCanvasUpdate = (canvasData: any, pageIndex: number) => {
     const canvas = canvasInstancesRef.current[pages[pageIndex]?.id];
-    if (!canvas || !canvasData) return;
+    if (!canvas || !canvasData) {
+      console.log('Canvas not found or no data', { canvas: !!canvas, canvasData: !!canvasData });
+      return;
+    }
 
     try {
-      // Load the canvas from JSON to sync objects
-      canvas.loadFromJSON(canvasData, () => {
+      console.log('Applying remote update to canvas:', canvasData);
+      
+      // Use loadFromJSON with proper callback handling
+      (canvas as any).loadFromJSON(canvasData, () => {
         canvas.renderAll();
-        console.log('Canvas updated from remote collaborator');
+        console.log('Canvas updated from remote collaborator successfully');
+      }, (o: any, object: any) => {
+        // Handle deserialization of custom objects
+        console.log('Deserialized object:', object);
       });
     } catch (error) {
       console.error('Failed to apply remote canvas update:', error);
@@ -349,6 +620,17 @@ export default function StudioPage() {
   // Cleanup collaboration channels when session ends
   useEffect(() => {
     return () => {
+      // Stop recording if active
+      if (isRecording && mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+      
+      // Clear recording timer
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      
       if (presenceChannelRef.current) {
         unsubscribeFromSession(presenceChannelRef.current);
       }
@@ -374,8 +656,22 @@ export default function StudioPage() {
             .single();
           
           if (error) {
-            console.error('Error fetching username:', error);
-            setUserUsername(user.email?.split('@')[0] || 'Guest');
+            // If profile doesn't exist, create one
+            if (error.code === 'PGRST116') {
+              const username = user.email?.split('@')[0] || 'Guest';
+              await supabase.from('profiles').insert([
+                {
+                  id: user.id,
+                  username: username,
+                  email: user.email,
+                }
+              ]);
+              setUserUsername(username);
+            } else {
+              // For other errors, use email prefix
+              console.error('Error fetching username:', error);
+              setUserUsername(user.email?.split('@')[0] || 'Guest');
+            }
           } else if (data?.username) {
             setUserUsername(data.username);
           } else {
@@ -587,8 +883,15 @@ export default function StudioPage() {
     // Don't start auto-save if we're loading a design
     if (loadingDesign) return;
     
+    // Kill any existing interval before creating a new one
+    if (autoSaveIntervalRef.current) {
+      clearInterval(autoSaveIntervalRef.current);
+    }
+    
     autoSaveIntervalRef.current = setInterval(() => {
-      if (currentCanvas && !loadingDesign) {
+      // Always check if we have a valid canvas at save time
+      const canvas = getCurrentCanvas();
+      if (canvas && typeof canvas.toJSON === 'function' && !loadingDesign) {
         saveToStorage();
       }
     }, 30000); // Auto-save every 30 seconds
@@ -598,7 +901,7 @@ export default function StudioPage() {
         clearInterval(autoSaveIntervalRef.current);
       }
     };
-  }, [currentCanvas, projectName, pages, loadingDesign]);
+  }, [loadingDesign]);
 
   // Periodic cleanup of old designs to prevent storage quota exceeded
   useEffect(() => {
@@ -611,6 +914,26 @@ export default function StudioPage() {
     }, 5 * 60 * 1000); // Run cleanup every 5 minutes
 
     return () => clearInterval(cleanupInterval);
+  }, []);
+
+  // Load Google Fonts dynamically for better font support
+  useEffect(() => {
+    const loadGoogleFonts = () => {
+      const fontsToLoad = PROFESSIONAL_FONTS.filter(f => !['Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS', 'Palatino Linotype', 'Garamond', 'Bookman', 'Century Gothic', 'Lucida Console', 'Tahoma', 'Calibri', 'Cambria', 'Consolas', 'Segoe UI', 'Segoe Print', 'Segoe Script'].includes(f));
+      
+      if (fontsToLoad.length === 0) return;
+      
+      // Create a link tag for Google Fonts
+      const fontNames = fontsToLoad.map(f => f.replace(/\s+/g, '+')).join('|');
+      const link = document.createElement('link');
+      link.href = `https://fonts.googleapis.com/css2?family=${fontNames}:wght@400;500;600;700&display=swap`;
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+      
+      console.log(`Loading ${fontsToLoad.length} fonts from Google Fonts`);
+    };
+    
+    loadGoogleFonts();
   }, []);
 
   // Add this new useEffect to load design for editing
@@ -660,8 +983,11 @@ export default function StudioPage() {
     // Don't save if we're still loading a design
     if (loadingDesign) return;
     
+    // Get the current canvas
+    const canvas = getCurrentCanvas();
+    
     // Don't save if no canvas exists yet
-    if (!currentCanvas) return;
+    if (!canvas || typeof canvas.toJSON !== 'function') return;
     
     try {
       setIsSaving(true);
@@ -674,37 +1000,42 @@ export default function StudioPage() {
       
       // Get all page data with the latest current page
       const allPagesData = pagesRef.current.map((page, index) => {
-        if (index === currentPageIndex && currentCanvas) {
-          return {
-            ...page,
-            data: currentCanvas.toJSON()
-          };
+        if (index === currentPageIndex) {
+          const pageCanvas = canvasInstancesRef.current[page.id];
+          if (pageCanvas && typeof pageCanvas.toJSON === 'function') {
+            return {
+              ...page,
+              data: pageCanvas.toJSON()
+            };
+          }
         }
         return page;
       });
 
       // Create thumbnail from current canvas (lightweight version)
+      // SKIP thumbnails to save storage space
       let thumbnail = '';
-      if (currentCanvas) {
-        const objects = currentCanvas.getObjects();
-        const gridObjects = objects.filter((obj: any) => obj.excludeFromExport);
-        gridObjects.forEach((obj: any) => { obj.visible = false; });
-        
-        try {
-          // Use JPEG format and even lower multiplier to reduce size
-          thumbnail = currentCanvas.toDataURL({
-            format: 'jpeg',
-            quality: 0.4,
-            multiplier: 0.2,
-          });
-        } catch (thumbnailError) {
-          console.warn('Failed to create thumbnail:', thumbnailError);
-          thumbnail = ''; // Skip thumbnail if there's an error
-        }
-        
-        gridObjects.forEach((obj: any) => { obj.visible = true; });
-        currentCanvas.renderAll();
-      }
+      // Commenting out thumbnail generation to avoid storage quota issues
+      // if (currentCanvas) {
+      //   const objects = currentCanvas.getObjects();
+      //   const gridObjects = objects.filter((obj: any) => obj.excludeFromExport);
+      //   gridObjects.forEach((obj: any) => { obj.visible = false; });
+      //   
+      //   try {
+      //     // Use JPEG format and even lower multiplier to reduce size
+      //     thumbnail = currentCanvas.toDataURL({
+      //       format: 'jpeg',
+      //       quality: 0.4,
+      //       multiplier: 0.2,
+      //     });
+      //   } catch (thumbnailError) {
+      //     console.warn('Failed to create thumbnail:', thumbnailError);
+      //     thumbnail = ''; // Skip thumbnail if there's an error
+      //   }
+      //   
+      //   gridObjects.forEach((obj: any) => { obj.visible = true; });
+      //   currentCanvas.renderAll();
+      // }
 
       const designData = {
         id: Date.now().toString(),
@@ -779,21 +1110,50 @@ export default function StudioPage() {
     if (currentPageIndex === null || currentPageIndex === undefined) return;
 
     const canvas = getCurrentCanvas();
-    if (!canvas || typeof canvas.toJSON !== 'function') return;
+    if (!canvas || typeof canvas.toJSON !== 'function') {
+      console.warn(`Cannot save page ${currentPageIndex}: canvas is not valid or toJSON is not available`);
+      return;
+    }
 
     try {
       const json = canvas.toJSON();
-      // Update pagesRef directly to ensure latest data is saved
+      // Update pagesRef IMMEDIATELY (synchronously) to ensure data is available for next page switch
       const newPages = [...pagesRef.current];
       if (newPages[currentPageIndex]) {
-        newPages[currentPageIndex] = { ...newPages[currentPageIndex], data: json };
+        newPages[currentPageIndex] = { 
+          ...newPages[currentPageIndex], 
+          data: json,
+          // Also save history state
+          history: historyRef.current,
+          historyIndex: historyIndexRef.current
+        };
       }
       pagesRef.current = newPages;
       setPages(newPages);
+      console.log(`Page ${currentPageIndex} saved with ${Object.keys(json.objects || {}).length} objects`);
     } catch (error) {
       console.error('Failed to save page data:', error);
     }
   };
+
+  // Update brush settings when mode or brush settings change
+  useEffect(() => {
+    if (!currentCanvas) return;
+
+    if (drawingMode && currentCanvas.isDrawingMode) {
+      if (!currentCanvas.freeDrawingBrush) {
+        currentCanvas.freeDrawingBrush = new fabric.PencilBrush(currentCanvas);
+      }
+      currentCanvas.freeDrawingBrush.color = fillColor;
+      currentCanvas.freeDrawingBrush.width = brushSize;
+    } else if (eraserMode && currentCanvas.isDrawingMode) {
+      if (!currentCanvas.freeDrawingBrush) {
+        currentCanvas.freeDrawingBrush = new fabric.PencilBrush(currentCanvas);
+      }
+      currentCanvas.freeDrawingBrush.color = backgroundColor;
+      currentCanvas.freeDrawingBrush.width = brushSize * 2;
+    }
+  }, [currentCanvas, drawingMode, eraserMode, fillColor, backgroundColor, brushSize]);
 
   // Initialize canvas
   useEffect(() => {
@@ -802,8 +1162,10 @@ export default function StudioPage() {
     
     if (!canvasContainerRef.current) return;
 
-    // Save current page data ONLY if canvas exists
-    if (currentCanvas && currentPageIndex !== null) {
+    // Save current page data ONLY if canvas exists AND we have a previous page
+    const previousPageIndex = pagesRef.current.findIndex(p => p.canvas === currentCanvas);
+    if (currentCanvas && previousPageIndex !== -1 && previousPageIndex !== currentPageIndex) {
+      console.log(`Saving page ${previousPageIndex} before switching to page ${currentPageIndex}`);
       saveCurrentPageData();
     }
 
@@ -819,7 +1181,7 @@ export default function StudioPage() {
       height: size.height,
       backgroundColor: backgroundColor,
       preserveObjectStacking: true,
-      selection: penMode ? false : selectionMode,
+      selection: penMode ? false : selectionModeRef.current,
     });
 
     if (gridVisible) {
@@ -950,6 +1312,11 @@ export default function StudioPage() {
     // Load saved data FIRST before other initializations (read from pagesRef to avoid stale closures)
     const savedData = pagesRef.current[currentPageIndex]?.data;
     const pageMeta = pagesRef.current[currentPageIndex];
+    console.log(`Loading page ${currentPageIndex}:`, {
+      hasData: !!savedData,
+      objectCount: savedData?.objects?.length || 0,
+      pageId: pageMeta?.id
+    });
     if (savedData) {
       fabricCanvas.loadFromJSON(savedData, () => {
         fabricCanvas.renderAll();
@@ -959,6 +1326,7 @@ export default function StudioPage() {
           try {
             setHistory(pageMeta.history);
             setHistoryIndex(typeof pageMeta.historyIndex === 'number' ? pageMeta.historyIndex : pageMeta.history.length - 1);
+            console.log(`Restored history for page ${currentPageIndex}:`, pageMeta.history.length, 'states');
           } catch (err) {
             console.warn('Failed to restore page history:', err);
             setHistory([savedData]);
@@ -996,7 +1364,7 @@ export default function StudioPage() {
         // Load template data immediately
         loadTemplateData(fabricCanvas);
       } else if (initialBgImage && !editDesignName) {
-        fabric.Image.fromURL(initialBgImage, (img) => {
+        (fabric.Image as any).fromURL(initialBgImage, (img: any) => {
           img.scaleToWidth(fabricCanvas.width);
           fabricCanvas.add(img);
           (fabricCanvas as any).sendToBack(img);
@@ -1013,7 +1381,7 @@ export default function StudioPage() {
       updatePropertiesFromSelection(fabricCanvas.getActiveObject());
       // Broadcast canvas changes to collaborators
       if (isCollaborating) {
-        broadcastCanvasChange(fabricCanvas.toJSON(['objects']));
+        broadcastCanvasChange((fabricCanvas as any).toJSON(['objects']));
       }
     });
     
@@ -1021,7 +1389,7 @@ export default function StudioPage() {
       saveState(fabricCanvas);
       // Broadcast canvas changes to collaborators
       if (isCollaborating) {
-        broadcastCanvasChange(fabricCanvas.toJSON(['objects']));
+        broadcastCanvasChange((fabricCanvas as any).toJSON(['objects']));
       }
     });
 
@@ -1047,6 +1415,16 @@ export default function StudioPage() {
     
     fabricCanvas.on('selection:cleared', () => {
       setSelectedObject(null);
+    });
+
+    // Right-click context menu for canvas objects
+    fabricCanvas.on('mouse:down', (e: any) => {
+      if (e.e.button === 2) { // 2 is right-click
+        e.e.preventDefault();
+        if (fabricCanvas.getActiveObjects && fabricCanvas.getActiveObjects().length > 0) {
+          setCanvasContextMenu({ x: e.e.clientX, y: e.e.clientY });
+        }
+      }
     });
 
     // Pen tool: collect points on canvas click when in pen mode
@@ -1078,12 +1456,30 @@ export default function StudioPage() {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      // Save canvas data before disposing
+      try {
+        const json = fabricCanvas.toJSON();
+        const newPages = [...pagesRef.current];
+        if (newPages[currentPageIndex]) {
+          newPages[currentPageIndex] = {
+            ...newPages[currentPageIndex],
+            data: json,
+            history: historyRef.current,
+            historyIndex: historyIndexRef.current
+          };
+        }
+        pagesRef.current = newPages;
+        console.log(`Cleanup: Saved page ${currentPageIndex} data before disposing`);
+      } catch (err) {
+        console.error('Failed to save data in cleanup:', err);
+      }
+      
       fabricCanvas.dispose();
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentPageIndex, gridVisible, selectedSize, backgroundColor, loadingDesign, selectionMode]);
+  }, [currentPageIndex, gridVisible, selectedSize, backgroundColor, loadingDesign]);
 
-  const addGrid = (canvas, size) => {
+  const addGrid = (canvas: fabric.Canvas, size: { width: number; height: number }) => {
     const gridSize = 20;
     for (let i = 0; i < (size.width / gridSize); i++) {
       canvas.add(new fabric.Line([i * gridSize, 0, i * gridSize, size.height], {
@@ -1155,7 +1551,7 @@ export default function StudioPage() {
         try {
           const src = shape.src || shape.url || shape.content;
           if (src) {
-            fabric.Image.fromURL(src, (img: any) => {
+            (fabric.Image as any).fromURL(src, (img: any) => {
               try {
                 const canvasWidth = canvas.width || 800;
                 const canvasHeight = canvas.height || 600;
@@ -1251,8 +1647,8 @@ export default function StudioPage() {
     }
   };
 
-  const getColorHex = (colorName) => {
-    const colorMap = {
+  const getColorHex = (colorName: string) => {
+    const colorMap: Record<string, string> = {
       'blue': '#3b82f6', 'light-blue': '#60a5fa', 'violet': '#8b5cf6',
       'white': '#ffffff', 'black': '#000000', 'grey': '#6b7280',
       'gray': '#6b7280', 'orange': '#f97316', 'red': '#ef4444',
@@ -1262,7 +1658,7 @@ export default function StudioPage() {
     return colorMap[colorName?.toLowerCase()] || '#3b82f6';
   };
 
-  const updatePropertiesFromSelection = (obj) => {
+  const updatePropertiesFromSelection = (obj: any) => {
     if (obj) {
       if (obj.fill) setFillColor(typeof obj.fill === 'string' ? obj.fill : '#3b82f6');
       if (obj.stroke) setStrokeColor(obj.stroke);
@@ -1282,7 +1678,7 @@ export default function StudioPage() {
     }
   };
 
-  const saveState = (canvas) => {
+  const saveState = (canvas: fabric.Canvas) => {
     if (!canvas) return;
     const json = canvas.toJSON();
     // Use refs to avoid stale state
@@ -1525,7 +1921,7 @@ export default function StudioPage() {
           console.log('SVG blob URL created:', url);
 
           // Load SVG as image
-          fabric.Image.fromURL(
+          (fabric.Image as any).fromURL(
             url,
             (img: any) => {
               try {
@@ -1741,7 +2137,7 @@ export default function StudioPage() {
       console.log('Image data URL created');
 
       // Create image object
-      const imgElement = new Image();
+      const imgElement = new window.Image();
       imgElement.onload = () => {
         try {
           console.log('Creating fabric image');
@@ -1827,36 +2223,52 @@ export default function StudioPage() {
   };
 
   const toggleDrawingMode = () => {
-    if (!currentCanvas) return;
+    if (!currentCanvas) {
+      console.warn('Canvas not available');
+      return;
+    }
     const newMode = !drawingMode;
     setDrawingMode(newMode);
     setEraserMode(false);
     setSelectionMode(!newMode);
     currentCanvas.isDrawingMode = newMode;
     currentCanvas.selection = !newMode;
-    if (newMode && currentCanvas.freeDrawingBrush) {
+    
+    if (newMode) {
+      // Initialize brush for drawing mode
       currentCanvas.freeDrawingBrush = new fabric.PencilBrush(currentCanvas);
       currentCanvas.freeDrawingBrush.color = fillColor;
       currentCanvas.freeDrawingBrush.width = brushSize;
+      console.log('Drawing mode enabled with brush:', { color: fillColor, width: brushSize });
+    } else {
+      currentCanvas.renderAll();
     }
   };
 
   const toggleEraserMode = () => {
-    if (!currentCanvas) return;
+    if (!currentCanvas) {
+      console.warn('Canvas not available');
+      return;
+    }
     const newMode = !eraserMode;
     setEraserMode(newMode);
     setDrawingMode(false);
     setSelectionMode(!newMode);
     currentCanvas.isDrawingMode = newMode;
     currentCanvas.selection = !newMode;
+    
     if (newMode) {
+      // Initialize brush for eraser mode
       currentCanvas.freeDrawingBrush = new fabric.PencilBrush(currentCanvas);
       currentCanvas.freeDrawingBrush.color = backgroundColor;
       currentCanvas.freeDrawingBrush.width = brushSize * 2;
+      console.log('Eraser mode enabled with brush:', { color: backgroundColor, width: brushSize * 2 });
+    } else {
+      currentCanvas.renderAll();
     }
   };
 
-  const updateBrushSize = (size) => {
+  const updateBrushSize = (size: number) => {
     setBrushSize(size);
     if (currentCanvas && currentCanvas.freeDrawingBrush) {
       currentCanvas.freeDrawingBrush.width = eraserMode ? size * 2 : size;
@@ -1874,13 +2286,67 @@ export default function StudioPage() {
   };
 
   const duplicateSelected = () => {
-    if (!currentCanvas || !selectedObject) return;
-    selectedObject.clone((cloned) => {
-      cloned.left = cloned.left + 20; cloned.top = cloned.top + 20;
-      currentCanvas.add(cloned);
-      currentCanvas.setActiveObject(cloned);
-      currentCanvas.renderAll();
-    });
+    const canvas = getCurrentCanvas();
+    if (!canvas || !selectedObject) {
+      console.warn('Canvas or selected object not available');
+      return;
+    }
+    
+    try {
+      console.log('Starting duplicate, object type:', selectedObject.type);
+      
+      // Serialize to JSON and back - the only reliable way
+      const objJSON = selectedObject.toJSON?.();
+      if (!objJSON) {
+        console.error('Failed to serialize object to JSON');
+        return;
+      }
+      
+      // Offset the position
+      objJSON.left = (objJSON.left || 0) + 20;
+      objJSON.top = (objJSON.top || 0) + 20;
+      
+      // Use fabric's utility to recreate from JSON with canvas context
+      const reviver = (json: any) => {
+        return new (fabric as any)[json.type](json);
+      };
+
+      // Create new object from JSON
+      const cloned = reviver(objJSON);
+      
+      if (!cloned) {
+        console.error('Failed to create object from JSON');
+        return;
+      }
+      
+      console.log('Clone created:', cloned.type);
+      
+      cloned.setCoords?.();
+      
+      // Add to canvas
+      canvas.add(cloned);
+      canvas.setActiveObject(cloned);
+      canvas.renderAll();
+      
+      console.log('Object added to canvas and rendered');
+      
+      // Save to storage
+      saveToStorage();
+      
+      // Broadcast to collaborators
+      if (isCollaborating && collaborationCode && typeof canvas.toJSON === 'function') {
+        try {
+          const fullCanvasData = canvas.toJSON();
+          broadcastCanvasUpdate(collaborationCode, fullCanvasData, currentUserRef.current);
+        } catch (broadcastError) {
+          console.error('Error broadcasting duplicate:', broadcastError);
+        }
+      }
+      
+      console.log('Object duplicated successfully');
+    } catch (error) {
+      console.error('Error duplicating object:', error);
+    }
   };
 
   const groupObjects = () => {
@@ -1898,10 +2364,13 @@ export default function StudioPage() {
   const ungroupObjects = () => {
     if (!currentCanvas || !selectedObject) return;
     if (selectedObject.type === 'group') {
-      const items = selectedObject._objects;
-      selectedObject._restoreObjectsState();
+      const items = [...selectedObject._objects];
       currentCanvas.remove(selectedObject);
-      items.forEach(item => currentCanvas.add(item));
+      items.forEach(item => {
+        item.setCoords();
+        currentCanvas.add(item);
+      });
+      currentCanvas.discardActiveObject();
       currentCanvas.renderAll();
     }
   };
@@ -1916,6 +2385,82 @@ export default function StudioPage() {
     if (!currentCanvas || !selectedObject) return;
     currentCanvas.sendObjectToBack(selectedObject);
     currentCanvas.renderAll();
+  };
+
+  const copyToClipboard = () => {
+    if (!currentCanvas || !selectedObject) {
+      console.warn('No object selected to copy');
+      return;
+    }
+    try {
+      // Store the actual selected object directly
+      clipboardRef.current = selectedObject;
+      console.log('Object copied to clipboard:', selectedObject.type);
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+    }
+  };
+
+  const pasteFromClipboard = () => {
+    const canvas = getCurrentCanvas();
+    if (!canvas || !clipboardRef.current) {
+      console.warn('Canvas or clipboard is empty');
+      return;
+    }
+    
+    try {
+      console.log('Starting paste');
+      const clipboard = clipboardRef.current;
+      
+      // Get JSON representation
+      const objJSON = clipboard.toJSON?.() || clipboard;
+      if (!objJSON) {
+        console.error('Failed to get JSON from clipboard');
+        return;
+      }
+      
+      // Offset the position
+      objJSON.left = (objJSON.left || 0) + 20;
+      objJSON.top = (objJSON.top || 0) + 20;
+      
+      // Recreate from JSON
+      const reviver = (json: any) => {
+        return new (fabric as any)[json.type](json);
+      };
+
+      const cloned = reviver(objJSON);
+      
+      if (!cloned) {
+        console.error('Failed to create object from clipboard');
+        return;
+      }
+      
+      console.log('Pasted clone created:', cloned.type);
+      
+      cloned.setCoords?.();
+      
+      // Add to canvas and select
+      canvas.add(cloned);
+      canvas.setActiveObject(cloned);
+      canvas.renderAll();
+      
+      console.log('Pasted object added to canvas');
+      
+      // Save and broadcast
+      saveToStorage();
+      if (isCollaborating && collaborationCode && typeof canvas.toJSON === 'function') {
+        try {
+          const fullCanvasData = canvas.toJSON();
+          broadcastCanvasUpdate(collaborationCode, fullCanvasData, currentUserRef.current);
+        } catch (broadcastError) {
+          console.error('Error broadcasting paste:', broadcastError);
+        }
+      }
+      
+      console.log('Object pasted from clipboard');
+    } catch (error) {
+      console.error('Error pasting from clipboard:', error);
+    }
   };
 
   const bringForward = () => {
@@ -1943,18 +2488,80 @@ export default function StudioPage() {
   };
 
   const toggleLock = () => {
-    if (!selectedObject) return;
+    if (!selectedObject || !currentCanvas) return;
     const isLocked = selectedObject.lockMovementX;
     (selectedObject as any).lockMovementX = !isLocked;
     (selectedObject as any).lockMovementY = !isLocked;
     (selectedObject as any).lockRotation = !isLocked;
     (selectedObject as any).lockScalingX = !isLocked;
     (selectedObject as any).lockScalingY = !isLocked;
-    selectedObject.selectable = isLocked;
-    currentCanvas?.renderAll();
+    selectedObject.selectable = isLocked; // If locked, make unselectable; if unlocked, make selectable
+    currentCanvas.renderAll();
+    // Trigger state update to refresh UI - create a deep copy to ensure React detects the change
+    setSelectedObject(JSON.parse(JSON.stringify(selectedObject)));
   };
 
-  const updateFillColor = (color) => {
+  const unlockAll = () => {
+    if (!currentCanvas) return;
+    const allObjects = currentCanvas.getObjects();
+    allObjects.forEach((obj: any) => {
+      obj.lockMovementX = false;
+      obj.lockMovementY = false;
+      obj.lockRotation = false;
+      obj.lockScalingX = false;
+      obj.lockScalingY = false;
+      obj.selectable = true;
+    });
+    currentCanvas.renderAll();
+    // Update selected object state if there is one
+    if (selectedObject) {
+      setSelectedObject(JSON.parse(JSON.stringify(selectedObject)));
+    }
+  };
+
+  const applyGradient = () => {
+    if (!selectedObject) {
+      alert('Please select a shape first');
+      return;
+    }
+
+    // Create gradient
+    const gradient = new fabric.Gradient({
+      type: 'linear',
+      coords: {
+        x1: 0,
+        y1: 0,
+        x2: selectedObject.width || 100,
+        y2: 0,
+      },
+      colorStops: gradientColors.map((color, index) => ({
+        offset: index / (gradientColors.length - 1),
+        color: color,
+      })),
+    });
+
+    selectedObject.fill = gradient;
+    currentCanvas?.renderAll();
+    setShowGradientEditor(false);
+  };
+
+  const addGradientColor = () => {
+    setGradientColors([...gradientColors, '#ffffff']);
+  };
+
+  const removeGradientColor = (index: number) => {
+    if (gradientColors.length > 2) {
+      setGradientColors(gradientColors.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateGradientColor = (index: number, color: string) => {
+    const newColors = [...gradientColors];
+    newColors[index] = color;
+    setGradientColors(newColors);
+  };
+
+  const updateFillColor = (color: string) => {
     setFillColor(color);
     if (selectedObject && 'fill' in selectedObject) {
       selectedObject.fill = color;
@@ -1965,7 +2572,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateStrokeColor = (color) => {
+  const updateStrokeColor = (color: string) => {
     setStrokeColor(color);
     if (selectedObject && 'stroke' in selectedObject) {
       selectedObject.stroke = color;
@@ -1973,7 +2580,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateStrokeWidth = (width) => {
+  const updateStrokeWidth = (width: number) => {
     setStrokeWidth(width);
     if (selectedObject && 'strokeWidth' in selectedObject) {
       selectedObject.strokeWidth = width;
@@ -1981,7 +2588,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateOpacity = (value) => {
+  const updateOpacity = (value: number) => {
     setOpacity(value);
     if (selectedObject) {
       selectedObject.opacity = value / 100;
@@ -1989,7 +2596,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateRotation = (angle) => {
+  const updateRotation = (angle: number) => {
     setRotation(angle);
     if (selectedObject) {
       selectedObject.rotate(angle);
@@ -1997,7 +2604,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateFontSize = (size) => {
+  const updateFontSize = (size: number) => {
     setFontSize(size);
     if (selectedObject && selectedObject.type === 'i-text') {
       selectedObject.fontSize = size;
@@ -2005,7 +2612,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateFontFamily = (family) => {
+  const updateFontFamily = (family: string) => {
     setFontFamily(family);
     if (selectedObject && selectedObject.type === 'i-text') {
       selectedObject.fontFamily = family;
@@ -2013,7 +2620,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateLineHeight = (value) => {
+  const updateLineHeight = (value: number) => {
     setLineHeight(value);
     if (selectedObject && selectedObject.type === 'i-text') {
       selectedObject.lineHeight = value;
@@ -2021,7 +2628,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateLetterSpacing = (value) => {
+  const updateLetterSpacing = (value: number) => {
     setLetterSpacing(value);
     if (selectedObject && selectedObject.type === 'i-text') {
       selectedObject.charSpacing = value;
@@ -2041,7 +2648,7 @@ export default function StudioPage() {
     currentCanvas?.renderAll();
   };
 
-  const updateBorderRadius = (value) => {
+  const updateBorderRadius = (value: number) => {
     setBorderRadius(value);
     if (selectedObject && selectedObject.type === 'rect') {
       selectedObject.rx = value; selectedObject.ry = value;
@@ -2069,16 +2676,16 @@ export default function StudioPage() {
     
     const filters: any[] = [];
     if (brightness !== 0) {
-      filters.push(new fabric.Image.filters.Brightness({ brightness: brightness / 100 }));
+      filters.push(new (fabric.Image as any).filters.Brightness({ brightness: brightness / 100 }));
     }
     if (contrast !== 0) {
-      filters.push(new fabric.Image.filters.Contrast({ contrast: contrast / 100 }));
+      filters.push(new (fabric.Image as any).filters.Contrast({ contrast: contrast / 100 }));
     }
     if (saturation !== 0) {
-      filters.push(new fabric.Image.filters.Saturation({ saturation: saturation / 100 }));
+      filters.push(new (fabric.Image as any).filters.Saturation({ saturation: saturation / 100 }));
     }
     if (blur > 0) {
-      filters.push(new fabric.Image.filters.Blur({ blur: blur / 100 }));
+      filters.push(new (fabric.Image as any).filters.Blur({ blur: blur / 100 }));
     }
     
     selectedObject.filters = filters;
@@ -2113,7 +2720,7 @@ export default function StudioPage() {
         undo();
         // Broadcast undo action to collaborators
         if (isCollaborating) {
-          broadcastCanvasChange(canvas.toJSON(['objects']));
+          broadcastCanvasChange((canvas as any).toJSON(['objects']));
         }
         return;
       }
@@ -2124,7 +2731,7 @@ export default function StudioPage() {
         redo();
         // Broadcast redo action to collaborators
         if (isCollaborating) {
-          broadcastCanvasChange(canvas.toJSON(['objects']));
+          broadcastCanvasChange((canvas as any).toJSON(['objects']));
         }
         return;
       }
@@ -2135,7 +2742,7 @@ export default function StudioPage() {
         deleteSelected();
         // Broadcast delete action to collaborators
         if (isCollaborating) {
-          broadcastCanvasChange(canvas.toJSON(['objects']));
+          broadcastCanvasChange((canvas as any).toJSON(['objects']));
         }
         return;
       }
@@ -2146,7 +2753,25 @@ export default function StudioPage() {
         duplicateSelected();
         // Broadcast duplicate action to collaborators
         if (isCollaborating) {
-          broadcastCanvasChange(canvas.toJSON(['objects']));
+          broadcastCanvasChange((canvas as any).toJSON(['objects']));
+        }
+        return;
+      }
+
+      // Copy: Ctrl+C
+      if (ctrl && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        copyToClipboard();
+        return;
+      }
+
+      // Paste: Ctrl+V
+      if (ctrl && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        pasteFromClipboard();
+        // Broadcast paste action to collaborators
+        if (isCollaborating) {
+          broadcastCanvasChange((canvas as any).toJSON(['objects']));
         }
         return;
       }
@@ -2161,7 +2786,7 @@ export default function StudioPage() {
 
     window.addEventListener('keydown', handler as any);
     return () => window.removeEventListener('keydown', handler as any);
-  }, [currentPageIndex, historyIndex, selectedObject, drawingMode, isCollaborating]);
+  }, [currentPageIndex, historyIndex, selectedObject, drawingMode, isCollaborating, collaborationCode]);
 
   // Spacebar handling and workspace panning key listeners
   useEffect(() => {
@@ -2243,7 +2868,7 @@ export default function StudioPage() {
     }
   };
 
-  const updateBackgroundColor = (color) => {
+  const updateBackgroundColor = (color: string) => {
     setBackgroundColor(color);
     if (currentCanvas) {
       currentCanvas.backgroundColor = color;
@@ -2354,34 +2979,43 @@ export default function StudioPage() {
   }, [zoom]);
 
   const addNewPage = () => {
-    // Atomically save current page JSON and append a new page to avoid races
-    const currentJson = currentCanvas ? currentCanvas.toJSON() : null;
+    // First, save current page data to pagesRef
+    if (currentCanvas && currentPageIndex !== null) {
+      const currentJson = currentCanvas.toJSON();
+      const newPages = [...pagesRef.current];
+      if (newPages[currentPageIndex]) {
+        newPages[currentPageIndex] = {
+          ...newPages[currentPageIndex],
+          data: currentJson,
+          history: historyRef.current,
+          historyIndex: historyIndexRef.current
+        };
+      }
+      pagesRef.current = newPages;
+    }
 
+    // Now add the new page
     const newPage = {
       id: Date.now(), // Use timestamp for unique ID
       canvas: null,
-      name: `Page ${pages.length + 1}`,
-      data: null
+      name: `Page ${pagesRef.current.length + 1}`,
+      data: null,
+      history: [],
+      historyIndex: -1
     };
 
-    setPages((prev) => {
-      const updated = prev.map((p, i) => {
-        if (i === currentPageIndex) {
-          return { ...p, data: currentJson };
-        }
-        return p;
-      });
-
-      const next = [...updated, newPage];
-      // switch to the newly added page index
-      setCurrentPageIndex(next.length - 1);
-      return next;
-    });
-
+    const updated = [...pagesRef.current, newPage];
+    pagesRef.current = updated;
+    setPages(updated);
+    
+    // Switch to the newly added page
+    setCurrentPageIndex(updated.length - 1);
     setShowAddPageModal(false);
+    
+    console.log(`New page added. Total pages: ${updated.length}`);
   };
 
-  const deletePage = (index) => {
+  const deletePage = (index: number) => {
     if (pages.length === 1) {
       alert('Cannot delete the last page');
       return;
@@ -2637,7 +3271,7 @@ showpage
 
   const loadTemplate = (templateUrl: string) => {
     if (!currentCanvas) return;
-    fabric.Image.fromURL(templateUrl, (img: any) => {
+    (fabric.Image as any).fromURL(templateUrl, (img: any) => {
       if (img && img.width && img.height) {
         img.scaleToWidth(currentCanvas!.width || 595);
         currentCanvas!.add(img);
@@ -2658,8 +3292,39 @@ showpage
     updateShadow();
   }, [shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY]);
 
+  // Real-time font updates
+  useEffect(() => {
+    if (selectedObject && selectedObject.type === 'i-text' && currentCanvas) {
+      selectedObject.fontFamily = fontFamily;
+      currentCanvas.renderAll();
+      console.log(`Font updated to: ${fontFamily}`);
+    }
+  }, [fontFamily, selectedObject, currentCanvas]);
+
+  // Real-time text property updates
+  useEffect(() => {
+    if (selectedObject && selectedObject.type === 'i-text' && currentCanvas) {
+      selectedObject.fontSize = fontSize;
+      currentCanvas.renderAll();
+    }
+  }, [fontSize, selectedObject, currentCanvas]);
+
+  useEffect(() => {
+    if (selectedObject && selectedObject.type === 'i-text' && currentCanvas) {
+      selectedObject.lineHeight = lineHeight;
+      currentCanvas.renderAll();
+    }
+  }, [lineHeight, selectedObject, currentCanvas]);
+
+  useEffect(() => {
+    if (selectedObject && selectedObject.type === 'i-text' && currentCanvas) {
+      selectedObject.charSpacing = letterSpacing;
+      currentCanvas.renderAll();
+    }
+  }, [letterSpacing, selectedObject, currentCanvas]);
+
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-950 via-black to-purple-950">
+    <div className="fixed inset-0 bg-black">
       <input
         ref={fileInputRef}
         type="file"
@@ -2806,214 +3471,6 @@ showpage
             <span className="text-sm font-bold text-white">My Designs</span>
           </button>
 
-          {/* Collaboration Button */}
-          <button
-            onClick={() => setCollaborativeMode(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all shadow-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-indigo-500/25"
-            title="Real-time collaborative editing"
-          >
-            <Sparkles className="w-4 h-4 text-white" />
-            <span className="text-sm text-white">{isCollaborating ? 'Live: ' + collaborationCode : 'Go Live'}</span>
-          </button>
-
-          {/* Real-time Collaboration Chat Sidebar - Right Side Only */}
-          {collaborativeMode && isCollaborating && (
-            <div className="fixed inset-0 z-50 flex">
-              {/* Background overlay (left side clickable to close) */}
-              <div className="flex-1 bg-black/50" onClick={() => setCollaborativeMode(false)} />
-
-              {/* Chat Sidebar (Right side - Full Height) */}
-              <div className="w-80 bg-slate-950 border-l border-white/10 flex flex-col h-screen">
-                {/* Session Info Box - At Top */}
-                <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-4 border-b border-white/10 space-y-4">
-                  {/* Session Code - PROMINENT */}
-                  <div className="bg-white/20 rounded-lg px-4 py-3 space-y-2 border border-white/30">
-                    <p className="text-xs font-semibold text-cyan-50 uppercase tracking-widest">Your Session Code</p>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-3xl font-bold text-white font-mono tracking-widest">{collaborationCode}</span>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(collaborationCode);
-                          alert('Code copied to clipboard!');
-                        }}
-                        className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
-                        title="Copy code"
-                      >
-                        <Copy className="w-5 h-5 text-white" />
-                      </button>
-                    </div>
-                    <p className="text-xs text-cyan-50">Share this code for others to join</p>
-                  </div>
-
-                  {/* Connected Collaborators */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Group className="w-4 h-4 text-white" />
-                        <span className="text-sm font-semibold text-white">Connected Collaborators</span>
-                      </div>
-                      <span className="text-sm font-bold text-cyan-100">({collaboratorsList.length})</span>
-                    </div>
-                    <div className="bg-white/10 rounded px-3 py-2 space-y-1">
-                      {collaboratorsList.map((collab) => (
-                        <div key={collab.id} className="flex items-center justify-between text-xs">
-                          <span className="text-white">{collab.name}</span>
-                          <span className="text-green-300">🔴 Live</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* End Session Button */}
-                  <button
-                    onClick={() => {
-                      setIsCollaborating(false);
-                      setCollaboratorsList([]);
-                      setCollaborationCode('');
-                      setChatMessages([]);
-                      setCollaborativeMode(false);
-                    }}
-                    className="w-full px-3 py-2 bg-red-600/40 hover:bg-red-600/50 border border-red-500/60 rounded-lg text-red-200 text-sm font-bold transition-colors"
-                  >
-                    End Session
-                  </button>
-                </div>
-
-                {/* Chat Header */}
-                <div className="bg-slate-800 px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-cyan-400" />
-                    <h3 className="font-bold text-white">Team Chat</h3>
-                  </div>
-                  <span className="text-xs text-gray-400 font-mono">{collaborationCode}</span>
-                </div>
-
-                {/* Chat Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {chatMessages.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-center">
-                      <div>
-                        <MessageCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                        <p className="text-gray-500 text-sm">No messages yet</p>
-                        <p className="text-gray-600 text-xs mt-1">Start chatting with your team!</p>
-                      </div>
-                    </div>
-                  ) : (
-                    chatMessages.map((msg) => (
-                      <div key={msg.id} className="bg-slate-800 rounded-lg p-3 border border-white/5">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="collab-color-indicator" style={{ backgroundColor: msg.color }}></div>
-                          <span className="text-sm font-semibold text-white">{msg.user}</span>
-                          <span className="text-xs text-gray-500 ml-auto">
-                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-300 break-words">{msg.message}</p>
-                      </div>
-                    ))
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Chat Input */}
-                <div className="border-t border-white/10 p-4 space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Type a message..."
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          sendChatMessage(chatInput);
-                        }
-                      }}
-                      className="flex-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
-                    />
-                    <button
-                      onClick={() => sendChatMessage(chatInput)}
-                      className="px-3 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white transition-colors"
-                      title="Send message"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 text-center">Press Enter to send</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Collaboration Setup Modal - Right Side Sidebar - FULL HEIGHT */}
-          {collaborativeMode && !isCollaborating && (
-            <>
-              {/* Backdrop */}
-              <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setCollaborativeMode(false)} />
-              
-              {/* Right Sidebar Modal */}
-              <div className="fixed right-0 top-0 z-50 h-screen w-96 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-l border-cyan-500/30 shadow-2xl overflow-y-auto">
-                {/* Header with Gradient */}
-                <div className="sticky top-0 bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-6 border-b border-cyan-400/30 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="w-7 h-7 text-white" />
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">Live Collaboration</h2>
-                      <p className="text-cyan-100 text-xs">Design together in real-time</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setCollaborativeMode(false)} className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0" title="Close">
-                    <X className="w-6 h-6 text-white" />
-                  </button>
-                </div>
-
-                <div className="p-8 space-y-8">
-                  {/* Start Session Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-white font-bold text-lg">Start a New Session</h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">Create a new collaborative session and share the code with your team to start designing together</p>
-                    <button
-                      onClick={startCollaborativeSession}
-                      className="w-full px-6 py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:shadow-cyan-500/30 text-lg"
-                    >
-                      <Plus className="w-6 h-6" />
-                      Start Live Session
-                    </button>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/20"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-3 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-400 font-bold uppercase tracking-widest">OR</span>
-                    </div>
-                  </div>
-
-                  {/* Join Session Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-white font-bold text-lg">Join Existing Session</h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">Ask your team for their collaboration code and join their active design session</p>
-                    <input
-                      type="text"
-                      placeholder="Enter code"
-                      value={collaborationCode}
-                      onChange={(e) => setCollaborationCode(e.target.value.toUpperCase())}
-                      className="w-full px-4 py-4 bg-slate-700/50 border-2 border-cyan-500/30 hover:border-cyan-500/60 focus:border-cyan-500 rounded-lg text-white placeholder-gray-400 text-center font-mono text-3xl font-bold tracking-widest focus:outline-none transition-all focus:shadow-lg focus:shadow-cyan-500/20"
-                      maxLength={6}
-                    />
-                    <button
-                      onClick={() => joinCollaborativeSession(collaborationCode)}
-                      className="w-full px-6 py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:shadow-green-500/30 text-lg"
-                    >
-                      Join Session
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
           {/* Export Dropdown */}
           <div className="relative">
             <button
@@ -3074,6 +3531,356 @@ showpage
           </div>
         </div>
       </div>
+
+      {/* Real-time Collaboration Chat Sidebar - Right Side Only */}
+      {collaborativeMode && isCollaborating && !chatMinimized && (
+        <div className="fixed top-16 bottom-0 right-0 z-30 flex pointer-events-none">
+          {/* Chat Sidebar (Right side - Full Height) - No overlay, designers can still work */}
+          <div className="w-80 bg-slate-950 border-l border-white/10 flex flex-col pointer-events-auto shadow-2xl">
+            {/* Session Info Box - At Top */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-3 border-b border-white/10 space-y-3">
+              {/* Session Code - PROMINENT */}
+              <div className="bg-white/20 rounded-lg px-3 py-2 space-y-1 border border-white/30">
+                <p className="text-xs font-semibold text-indigo-50 uppercase tracking-widest">Your Session Code</p>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xl font-bold text-white font-mono tracking-widest">{collaborationCode}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(collaborationCode);
+                      alert('Code copied to clipboard!');
+                    }}
+                    className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
+                    title="Copy code"
+                  >
+                    <Copy className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+                <p className="text-xs text-indigo-50">Share this code for others to join</p>
+              </div>
+
+              {/* Connected Collaborators */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Group className="w-3 h-3 text-white" />
+                    <span className="text-xs font-semibold text-white">Connected Collaborators</span>
+                  </div>
+                  <span className="text-xs font-bold text-indigo-100">({collaboratorsList.length})</span>
+                </div>
+                <div className="bg-white/10 rounded px-2 py-1 space-y-0.5">
+                  {collaboratorsList.map((collab) => (
+                    <div key={collab.id} className="flex items-center justify-between text-xs">
+                      <span className="text-white">{collab.name}</span>
+                      <span className="text-green-300">🔴 Live</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* End Session Button */}
+              <button
+                onClick={() => {
+                  setIsCollaborating(false);
+                  setCollaboratorsList([]);
+                  setCollaborationCode('');
+                  setChatMessages([]);
+                  setCollaborativeMode(false);
+                }}
+                className="w-full px-2 py-1.5 bg-red-600/40 hover:bg-red-600/50 border border-red-500/60 rounded-lg text-red-200 text-xs font-bold transition-colors active:scale-95"
+              >
+                End Session
+              </button>
+            </div>
+
+            {/* Chat Header */}
+            <div className="bg-slate-800 px-3 py-2 border-b border-indigo-500/30 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <MessageCircle className="w-4 h-4 text-indigo-400" />
+                <h3 className="font-bold text-white text-sm">Team Chat</h3>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-400 font-mono">{collaborationCode}</span>
+                <button
+                  onClick={() => setChatMinimized(true)}
+                  className="p-1 hover:bg-slate-700 rounded transition-colors flex-shrink-0"
+                  title="Minimize chat (keep designing)"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {chatMessages.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-center">
+                  <div>
+                    <MessageCircle className="w-6 h-6 text-gray-600 mx-auto mb-1" />
+                    <p className="text-gray-500 text-xs">No messages yet</p>
+                    <p className="text-gray-600 text-xs mt-0.5">Start chatting!</p>
+                  </div>
+                </div>
+              ) : (
+                chatMessages.map((msg) => {
+                  const isOwnMessage = msg.user === userUsername;
+                  return (
+                    <div 
+                      key={msg.id} 
+                      className={`flex gap-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setContextMenu({ x: e.clientX, y: e.clientY, messageId: msg.id, isOwn: isOwnMessage });
+                      }}
+                    >
+                      <div className={`max-w-xs rounded-lg p-2 cursor-context-menu ${
+                        isOwnMessage 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-gray-700 text-gray-100'
+                      }`}>
+                        {!isOwnMessage && (
+                          <span className="text-xs font-semibold block mb-0.5 opacity-90">{msg.user}</span>
+                        )}
+                        {msg.replyingToUser && (
+                          <div className="text-xs mb-1 pb-1 border-b border-white/20 opacity-75">
+                            <span className="font-semibold">↳ @{msg.replyingToUser}</span>
+                          </div>
+                        )}
+                        {msg.audioUrl ? (
+                          <div className="flex items-center gap-1">
+                            <Play className="w-3 h-3" />
+                            <audio 
+                              controls 
+                              controlsList="nodownload"
+                              className="text-xs" 
+                              style={{ maxWidth: '150px', height: '20px' }}
+                              src={msg.audioUrl}
+                            >
+                              Your browser does not support audio.
+                            </audio>
+                          </div>
+                        ) : (
+                          <p className="text-xs break-words">{msg.message}</p>
+                        )}
+                        <span className="text-xs opacity-70 mt-0.5 block">
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Context Menu */}
+            {contextMenu && (
+              <div
+                ref={contextMenuRef}
+                className="fixed bg-gray-800 border border-white/10 rounded-lg shadow-lg z-50 p-1 flex gap-1"
+                style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+                onClick={() => setContextMenu(null)}
+              >
+                <button
+                  onClick={() => {
+                    const message = chatMessages.find(m => m.id === contextMenu.messageId);
+                    if (message) {
+                      navigator.clipboard.writeText(message.message || 'Audio message');
+                    }
+                    setContextMenu(null);
+                  }}
+                  className="p-2 hover:bg-blue-600/20 rounded transition-colors group relative"
+                  title="Copy message"
+                >
+                  <Copy className="w-4 h-4 text-blue-400" />
+                </button>
+                <button
+                  onClick={() => {
+                    const message = chatMessages.find(m => m.id === contextMenu.messageId);
+                    if (message) {
+                      setReplyingTo({ id: message.id, user: message.user });
+                    }
+                    setContextMenu(null);
+                  }}
+                  className="p-2 hover:bg-green-600/20 rounded transition-colors group relative"
+                  title="Reply"
+                >
+                  <Send className="w-4 h-4 text-green-400" />
+                </button>
+                {contextMenu.isOwn && (
+                  <button
+                    onClick={() => {
+                      deleteMessage(contextMenu.messageId);
+                      setContextMenu(null);
+                    }}
+                    className="p-2 hover:bg-red-600/20 rounded transition-colors group relative"
+                    title="Delete message"
+                  >
+                    <Trash className="w-4 h-4 text-red-400" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Chat Input */}
+            <div className="border-t border-white/10 p-2 space-y-1">
+              {replyingTo && (
+                <div className="bg-indigo-600/20 border border-indigo-500/50 rounded-lg p-2 flex items-center gap-2">
+                  <span className="text-xs text-indigo-300 flex-1">Replying to <span className="font-semibold text-indigo-200">@{replyingTo.user}</span></span>
+                  <button
+                    onClick={() => setReplyingTo(null)}
+                    className="p-1 hover:bg-indigo-600/50 rounded transition-colors"
+                    title="Cancel reply"
+                  >
+                    <X className="w-3.5 h-3.5 text-indigo-300" />
+                  </button>
+                </div>
+              )}
+              {isRecording && (
+                <div className="bg-red-600/20 border border-red-500/50 rounded-lg p-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="text-xs text-red-200 flex-1">Recording: {recordingTime}s</span>
+                  <button
+                    onClick={stopRecording}
+                    className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-white text-xs transition-colors"
+                    title="Stop recording"
+                  >
+                    <SquareIcon className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              <div className="flex gap-1.5">
+                <input
+                  type="text"
+                  placeholder={isRecording ? "Recording..." : "Type a message..."}
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isRecording) {
+                      sendChatMessage(chatInput);
+                      setChatInput('');
+                      setReplyingTo(null);
+                    }
+                  }}
+                  disabled={isRecording}
+                  className="flex-1 px-2 py-1.5 bg-slate-800 border border-white/10 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 disabled:opacity-50"
+                />
+                <button
+                  onClick={() => {
+                    if (isRecording) {
+                      stopRecording();
+                    } else {
+                      startRecording();
+                    }
+                  }}
+                  className={`px-2 py-1.5 rounded-lg text-white transition-colors ${
+                    isRecording 
+                      ? 'bg-red-600 hover:bg-red-700' 
+                      : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                  title={isRecording ? "Stop recording" : "Record audio"}
+                >
+                  {isRecording ? (
+                    <MicOff className="w-3.5 h-3.5" />
+                  ) : (
+                    <Mic className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    sendChatMessage(chatInput);
+                    setChatInput('');
+                    setReplyingTo(null);
+                  }}
+                  disabled={isRecording}
+                  className="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white transition-colors disabled:opacity-50"
+                  title="Send message"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 text-center">Press Enter to send • Click 🎤 to record</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Collaboration Setup Modal - Right Side Sidebar - FULL HEIGHT */}
+      {collaborativeMode && !isCollaborating && (
+        <>
+          {/* Backdrop */}
+          <div className="fixed top-16 inset-x-0 bottom-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setCollaborativeMode(false)} />
+          
+          {/* Right Sidebar Modal */}
+          <div className="fixed right-0 top-16 z-50 bottom-0 w-96 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-l border-indigo-500/40 shadow-2xl shadow-indigo-500/20 overflow-y-auto">
+            {/* Header with Premium Gradient */}
+            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 px-4 py-4 border-b border-indigo-400/40 flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
+                  <Image 
+                    src="/logo2.svg" 
+                    alt="Collaboration" 
+                    width={20} 
+                    height={20}
+                    className="w-5 h-5"
+                  />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Live Collaboration</h2>
+                  <p className="text-indigo-100 text-xs">Design together in real-time</p>
+                </div>
+              </div>
+              <button onClick={() => setCollaborativeMode(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0 hover:bg-white/10" title="Close">
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-5">
+              {/* Start Session Section */}
+              <div className="space-y-2">
+                <h3 className="text-white font-bold text-sm">Start a New Session</h3>
+                <p className="text-gray-300 text-xs leading-relaxed">Create a new collaborative session and share the code with your team to start designing together</p>
+                <button
+                  onClick={startCollaborativeSession}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-indigo-500/40 text-sm active:scale-95"
+                >
+                  <Plus className="w-4 h-4" />
+                  Start Live Session
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/20"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-gray-400 font-bold uppercase tracking-widest text-xs">OR</span>
+                </div>
+              </div>
+
+              {/* Join Session Section */}
+              <div className="space-y-2">
+                <h3 className="text-white font-bold text-sm">Join Existing Session</h3>
+                <p className="text-gray-300 text-xs leading-relaxed">Ask your team for their collaboration code and join their active design session</p>
+                <input
+                  type="text"
+                  placeholder="Enter code"
+                  value={collaborationCode}
+                  onChange={(e) => setCollaborationCode(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 bg-slate-700/50 border-2 border-indigo-500/30 hover:border-indigo-500/60 focus:border-indigo-500 rounded-lg text-white placeholder-gray-400 text-center font-mono text-xl font-bold tracking-widest focus:outline-none transition-all focus:shadow-lg focus:shadow-indigo-500/20"
+                  maxLength={6}
+                />
+                <button
+                  onClick={() => joinCollaborativeSession(collaborationCode)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:shadow-indigo-500/40 text-sm active:scale-95"
+                >
+                  Join Session
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Left Sidebar - Tools */}
       <div className="absolute top-16 left-0 bottom-0 bg-black/95 backdrop-blur-xl border-r border-white/10 z-40 overflow-y-auto transition-all w-80">
@@ -3261,6 +4068,10 @@ showpage
               <div>
                 <h3 className="text-white font-bold mb-3">Actions</h3>
                 <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => setShowGradientEditor(!showGradientEditor)} disabled={!selectedObject} className="p-2 bg-indigo-600/30 hover:bg-indigo-600/50 rounded-lg transition-colors disabled:opacity-30 flex items-center justify-center gap-2">
+                    <Blend className="w-4 h-4 text-indigo-400" />
+                    <span className="text-xs text-indigo-200">Gradient</span>
+                  </button>
                   <button onClick={duplicateSelected} disabled={!selectedObject} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-30 flex items-center justify-center gap-2">
                     <Copy className="w-4 h-4 text-white" />
                     <span className="text-xs text-white">Duplicate</span>
@@ -3277,6 +4088,10 @@ showpage
                     <Ungroup className="w-4 h-4 text-white" />
                     <span className="text-xs text-white">Ungroup</span>
                   </button>
+                  <button onClick={unlockAll} className="p-2 bg-green-500/10 hover:bg-green-500/20 rounded-lg transition-colors flex items-center justify-center gap-2" title="Unlock all locked objects on the canvas">
+                    <Unlock className="w-4 h-4 text-green-400" />
+                    <span className="text-xs text-green-400">Unlock All</span>
+                  </button>
                   <button onClick={clearCanvas} className="p-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors flex items-center justify-center gap-2 col-span-2">
                     <Trash2 className="w-4 h-4 text-red-400" />
                     <span className="text-xs text-red-400">Clear Canvas</span>
@@ -3284,39 +4099,7 @@ showpage
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-white font-bold mb-3">Settings</h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setGridVisible(!gridVisible)}
-                    className={`w-full p-2 rounded-lg transition-colors flex items-center justify-between ${
-                      gridVisible ? 'bg-purple-600/20 border border-purple-500/30' : 'bg-white/5 hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="text-sm text-white flex items-center gap-2">
-                      <Grid3x3 className="w-4 h-4" />
-                      Show Grid
-                    </span>
-                    <div className={`w-10 h-5 rounded-full transition-colors ${gridVisible ? 'bg-purple-600' : 'bg-gray-600'}`}>
-                      <div className={`w-4 h-4 bg-white rounded-full mt-0.5 transition-transform ${gridVisible ? 'ml-5' : 'ml-0.5'}`} />
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setSnapToGrid(!snapToGrid)}
-                    className={`w-full p-2 rounded-lg transition-colors flex items-center justify-between ${
-                      snapToGrid ? 'bg-purple-600/20 border border-purple-500/30' : 'bg-white/5 hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="text-sm text-white flex items-center gap-2">
-                      <Magnet className="w-4 h-4" />
-                      Snap to Grid
-                    </span>
-                    <div className={`w-10 h-5 rounded-full transition-colors ${snapToGrid ? 'bg-purple-600' : 'bg-gray-600'}`}>
-                      <div className={`w-4 h-4 bg-white rounded-full mt-0.5 transition-transform ${snapToGrid ? 'ml-5' : 'ml-0.5'}`} />
-                    </div>
-                  </button>
-                </div>
-              </div>
+
 
               <button
                 onClick={() => setShowLayers(!showLayers)}
@@ -3631,6 +4414,10 @@ showpage
                         {selectedObject.lockMovementX ? <Lock className="w-4 h-4 text-white" /> : <Unlock className="w-4 h-4 text-white" />}
                         <span className="text-xs text-white">{selectedObject.lockMovementX ? 'Unlock' : 'Lock'}</span>
                       </button>
+                      <button onClick={unlockAll} className="p-2 bg-white/5 hover:bg-white/10 rounded transition-colors flex items-center justify-center gap-2 col-span-2" title="Unlock all locked objects on the canvas">
+                        <Unlock className="w-4 h-4 text-green-400" />
+                        <span className="text-xs text-white">Unlock All</span>
+                      </button>
                     </div>
                   </div>
                 </>
@@ -3684,9 +4471,12 @@ showpage
                   >
                     <div
                       onClick={() => {
+                        // Save current page data before switching
                         saveCurrentPageData();
-                        // switch page
+                        
+                        // Switch page - the canvas useEffect will reload with the saved data
                         setCurrentPageIndex(index);
+                        
                         // restore history for the selected page if present
                         const pageMeta = pagesRef.current[index];
                         if (pageMeta?.history && Array.isArray(pageMeta.history)) {
@@ -3759,7 +4549,7 @@ showpage
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        currentCanvas.bringForward(obj);
+                        (currentCanvas as any).bringForward(obj);
                         currentCanvas.renderAll();
                       }}
                       className="p-1 hover:bg-white/20 rounded"
@@ -3770,7 +4560,7 @@ showpage
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        currentCanvas.sendBackward(obj);
+                        (currentCanvas as any).sendBackward(obj);
                         currentCanvas.renderAll();
                       }}
                       className="p-1 hover:bg-white/20 rounded"
@@ -3781,6 +4571,62 @@ showpage
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gradient Editor Modal */}
+      {showGradientEditor && (
+        <div className="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center" onClick={() => setShowGradientEditor(false)}>
+          <div className="bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-[450px]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold flex items-center gap-2">
+                <Blend className="w-5 h-5 text-indigo-400" />
+                Gradient Editor
+              </h3>
+              <button onClick={() => setShowGradientEditor(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Gradient Preview */}
+              <div className="p-3 rounded-lg border border-white/10 bg-gradient-to-r h-24 from-blue-500 via-purple-500 to-pink-500" style={{
+                backgroundImage: `linear-gradient(${gradientAngle}deg, ${gradientColors.join(', ')})`
+              }}>
+              </div>
+
+              {/* Angle Control */}
+              <div>
+                <label className="text-xs text-gray-400 mb-2 block">Gradient Angle: {gradientAngle}°</label>
+                <input type="range" min="0" max="360" value={gradientAngle} onChange={(e) => setGradientAngle(Number(e.target.value))} className="w-full" />
+              </div>
+
+              {/* Color Stops */}
+              <div className="space-y-2">
+                <label className="text-xs text-gray-400 block">Colors</label>
+                {gradientColors.map((color, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <input type="color" value={color} onChange={(e) => updateGradientColor(index, e.target.value)} className="w-10 h-8 rounded cursor-pointer" />
+                    <input type="text" value={color} onChange={(e) => updateGradientColor(index, e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-xs text-white" />
+                    <button onClick={() => removeGradientColor(index)} disabled={gradientColors.length <= 2} className="p-1.5 bg-red-600/30 hover:bg-red-600/50 disabled:opacity-30 rounded transition-colors">
+                      <Trash className="w-3 h-3 text-red-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Color Button */}
+              <button onClick={addGradientColor} className="w-full p-2 bg-indigo-600/30 hover:bg-indigo-600/50 rounded-lg transition-colors flex items-center justify-center gap-2">
+                <Plus className="w-4 h-4 text-indigo-400" />
+                <span className="text-xs text-indigo-200">Add Color</span>
+              </button>
+
+              {/* Apply Button */}
+              <button onClick={applyGradient} className="w-full p-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors text-white font-semibold text-sm">
+                Apply Gradient
+              </button>
             </div>
           </div>
         </div>
@@ -3801,7 +4647,7 @@ showpage
             </div>
 
             <div className="space-y-3 mb-6">
-              {Object.keys(PAGE_SIZES).map((size) => (
+              {(Object.keys(PAGE_SIZES) as Array<keyof typeof PAGE_SIZES>).map((size) => (
                 <button
                   key={size}
                   onClick={() => setSelectedSize(size)}
@@ -3955,7 +4801,7 @@ showpage
       </div>
 
       {/* Canvas Container */}
-      <div ref={workspaceRef} className="absolute inset-0 top-16 bg-gray-900/50 overflow-auto transition-all left-80 right-0">
+      <div ref={workspaceRef} className={`absolute inset-0 top-16 bg-gray-900/50 overflow-auto transition-all left-80 ${isCollaborating && collaborativeMode && !chatMinimized ? 'right-80' : 'right-0'}`}>
         <div
           style={{
             minWidth: 2400,
@@ -4007,9 +4853,7 @@ showpage
             }}
           >
             {/* Floating subtle gradient decorations inside the page */}
-            <div className="floating-gradient g1" />
-            <div className="floating-gradient g2" />
-            <div className="floating-gradient g3" />
+
 
             {/* Smart guide overlays (shown while dragging) */}
             <div ref={verticalGuideRef} className="guide-line guide-vertical" />
@@ -4019,19 +4863,136 @@ showpage
             <div className="canvas-wrapper absolute top-2 left-2 z-10 flex gap-2">
             </div>
 
-            <div ref={canvasContainerRef} className="canvas-container" />
+            <div 
+              ref={canvasContainerRef} 
+              className="canvas-container"
+              onContextMenu={(e) => {
+                e.preventDefault();
+                // Get current canvas and check if there's a selected object
+                const activeObjects = currentCanvas?.getActiveObjects?.();
+                if (activeObjects && activeObjects.length > 0) {
+                  setCanvasContextMenu({ x: e.clientX, y: e.clientY });
+                }
+              }}
+            />
           </div>
         </div>
       </div>
 
+      {/* Canvas Object Context Menu - Positioned at document level */}
+      {canvasContextMenu && (
+        <div
+          ref={canvasContextMenuRef}
+          className="fixed bg-gray-900 border border-indigo-500/60 rounded-lg shadow-2xl z-[60] overflow-hidden backdrop-blur-xl min-w-max"
+          style={{ top: `${canvasContextMenu.y}px`, left: `${canvasContextMenu.x}px` }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <button
+            onClick={() => {
+              if (selectedObject && currentCanvas) {
+                currentCanvas.bringObjectToFront(selectedObject);
+                currentCanvas.renderAll();
+              }
+              setCanvasContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-indigo-600/30 transition-colors flex items-center gap-2 border-b border-white/10"
+            title="Bring to Front"
+          >
+            <ChevronUp className="w-4 h-4 text-indigo-400" />
+            Bring to Front
+          </button>
+          <button
+            onClick={() => {
+              if (selectedObject && currentCanvas) {
+                (currentCanvas as any).bringForward(selectedObject);
+                currentCanvas.renderAll();
+              }
+              setCanvasContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-indigo-600/30 transition-colors flex items-center gap-2 border-b border-white/10"
+            title="Bring Forward"
+          >
+            <ChevronUp className="w-3 h-3 text-gray-400" />
+            Bring Forward
+          </button>
+          <button
+            onClick={() => {
+              if (selectedObject && currentCanvas) {
+                (currentCanvas as any).sendBackward(selectedObject);
+                currentCanvas.renderAll();
+              }
+              setCanvasContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-indigo-600/30 transition-colors flex items-center gap-2 border-b border-white/10"
+            title="Send Backward"
+          >
+            <ChevronDown className="w-3 h-3 text-gray-400" />
+            Send Backward
+          </button>
+          <button
+            onClick={() => {
+              if (selectedObject && currentCanvas) {
+                currentCanvas.sendObjectToBack(selectedObject);
+                currentCanvas.renderAll();
+              }
+              setCanvasContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-indigo-600/30 transition-colors flex items-center gap-2 border-b border-white/10"
+            title="Send to Back"
+          >
+            <ChevronDown className="w-4 h-4 text-indigo-400" />
+            Send to Back
+          </button>
+          <button
+            onClick={() => {
+              duplicateSelected();
+              setCanvasContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-indigo-600/30 transition-colors flex items-center gap-2 border-b border-white/10"
+            title="Duplicate"
+          >
+            <Copy className="w-4 h-4 text-green-400" />
+            Duplicate
+          </button>
+          <button
+            onClick={() => {
+              toggleLock();
+              setCanvasContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-indigo-600/30 transition-colors flex items-center gap-2 border-b border-white/10"
+            title={selectedObject?.lockMovementX ? 'Unlock' : 'Lock'}
+          >
+            {selectedObject?.lockMovementX ? (
+              <>
+                <Lock className="w-4 h-4 text-orange-400" />
+                Unlock
+              </>
+            ) : (
+              <>
+                <Unlock className="w-4 h-4 text-orange-400" />
+                Lock
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => {
+              deleteSelected();
+              setCanvasContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-red-600/30 transition-colors flex items-center gap-2"
+            title="Delete"
+          >
+            <Trash className="w-4 h-4 text-red-400" />
+            Delete
+          </button>
+        </div>
+      )}
+
       {/* Floating gradient styles for page decorations and panning cursor */}
       <style>{`
-        .floating-gradient { position: absolute; border-radius: 50%; filter: blur(30px); opacity: 0.25; transform: translate3d(0,0,0); }
-        .floating-gradient.g1 { width: 180px; height: 180px; left: 10%; top: 10%; background: radial-gradient(circle at 30% 30%, #7c3aed, transparent 40%); animation: floaty 6s ease-in-out infinite alternate; }
-        .floating-gradient.g2 { width: 120px; height: 120px; right: 12%; top: 25%; background: radial-gradient(circle at 30% 30%, #06b6d4, transparent 40%); animation: floaty 7s ease-in-out infinite alternate-reverse; }
-        .floating-gradient.g3 { width: 220px; height: 220px; left: 50%; bottom: 8%; background: radial-gradient(circle at 30% 30%, #f472b6, transparent 40%); animation: floaty 9s ease-in-out infinite alternate; }
         @keyframes floaty { from { transform: translateY(0px) } to { transform: translateY(-18px) } }
-        .page-box { background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%); }
       `}</style>
 
       {/* Save Notification */}
@@ -4051,6 +5012,42 @@ showpage
       <div className="absolute bottom-6 left-[340px] text-white/20 text-xs font-medium pointer-events-none z-30">
         Alton Studio · {templateData?.name || selectedSize} · Page {currentPageIndex + 1}/{pages.length}
       </div>
+
+      {/* Circular Floating Collaboration Button */}
+      {!collaborativeMode && (
+      <button
+        onClick={() => setCollaborativeMode(true)}
+        className="fixed right-8 bottom-8 w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-2xl hover:shadow-indigo-500/40 transition-all hover:scale-110 flex items-center justify-center z-50 group cursor-pointer"
+        title="Open Live Collaboration Widget"
+      >
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 opacity-0 group-hover:opacity-30 blur-lg transition-opacity pointer-events-none" />
+        <Image 
+          src="/logo2.svg" 
+          alt="Collaboration" 
+          width={40} 
+          height={40}
+          className="relative z-10 group-hover:rotate-12 transition-transform"
+        />
+        {isCollaborating && (
+          <div className="absolute top-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse pointer-events-none" />
+        )}
+      </button>
+      )}
+
+      {/* Re-open Chat Button When Minimized */}
+      {isCollaborating && collaborativeMode && chatMinimized && (
+      <button
+        onClick={() => setChatMinimized(false)}
+        className="fixed top-20 right-4 p-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 shadow-lg transition-all flex items-center gap-2 z-40 group cursor-pointer text-white text-xs font-semibold"
+        title="Open chat"
+      >
+        <MessageCircle className="w-4 h-4" />
+        Team Chat
+        {chatMessages.length > 0 && (
+          <div className="ml-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+        )}
+      </button>
+      )}
     </div>
   );
 }

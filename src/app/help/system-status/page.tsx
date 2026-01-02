@@ -32,7 +32,7 @@ interface ServiceStatus {
 export default function SystemStatus() {
   const [isDark, setIsDark] = useState(true);
   const [services, setServices] = useState<ServiceStatus[]>([]);
-  const [incidentHistory, setIncidentHistory] = useState([]);
+  const [incidentHistory, setIncidentHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);

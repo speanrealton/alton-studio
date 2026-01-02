@@ -33,13 +33,25 @@ export default function AuthPage() {
     setMessage('');
 
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error, data } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
       if (error) {
         setMessage(error.message);
         setLoading(false);
       } else {
-        setMessage('Check your email — confirmation sent!');
-        setLoading(false);
+        // Auto sign in after signup and redirect
+        if (data.user) {
+          await supabase.auth.signInWithPassword({ email, password });
+          router.push('/');
+        } else {
+          setMessage('Account created! Redirecting...');
+          setTimeout(() => router.push('/'), 2000);
+        }
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });

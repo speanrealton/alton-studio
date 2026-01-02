@@ -6,16 +6,16 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Flame, Heart, MessageCircle, Share2, User, Upload, Home, Search, PlusCircle, Bell, Play, Volume2, VolumeX, Eye, Check, Copy, DollarSign } from 'lucide-react';
-import { CurrencyConverter } from '@/components/CurrencyConverter';
-import type { Currency } from '@/lib/currencies';
+import CurrencyConverter from '@/components/CurrencyConverter';
+import type { CurrencyCode } from '@/lib/currencies';
 
-export default function TikTokStyleDrops() {
+export default function Marketplace() {
   const [drops, setDrops] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
   const [commentsByDrop, setCommentsByDrop] = useState<any>({});
   const [loading, setLoading] = useState(true);
-  const [userCurrency, setUserCurrency] = useState<Currency>('USD');
+  const [userCurrency, setUserCurrency] = useState<CurrencyCode>('USD');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dropErrors, setDropErrors] = useState<{ [key: string]: boolean }>({});
   const [dropPaused, setDropPaused] = useState<{ [key: string]: boolean }>({});
@@ -37,7 +37,7 @@ export default function TikTokStyleDrops() {
         
         // Load user's preferred currency
         const preferredCurrency = (data.user.user_metadata as any)?.preferred_currency || 'USD';
-        setUserCurrency(preferredCurrency as Currency);
+        setUserCurrency(preferredCurrency as CurrencyCode);
       }
     });
 
@@ -52,7 +52,7 @@ export default function TikTokStyleDrops() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, (payload: any) => {
         console.log('New comment in real-time:', payload);
         const newComment = payload.new;
-        setCommentsByDrop(prev => ({
+        setCommentsByDrop((prev: any) => ({
           ...prev,
           [newComment.video_id]: [...(prev[newComment.video_id] || []), newComment]
         }));
@@ -459,7 +459,7 @@ export default function TikTokStyleDrops() {
     console.log('Sending comment with:', { userName, userImage, text }); // Debug
 
     // Optimistic update - show comment immediately
-    setCommentsByDrop(prev => ({
+    setCommentsByDrop((prev: any) => ({
       ...prev,
       [dropId]: [...(prev[dropId] || []), newComment]
     }));
@@ -483,9 +483,9 @@ export default function TikTokStyleDrops() {
         code: error.code
       });
       // Remove optimistic comment on error
-      setCommentsByDrop(prev => ({
+      setCommentsByDrop((prev: any) => ({
         ...prev,
-        [dropId]: prev[dropId]?.filter(c => c.id !== newComment.id) || []
+        [dropId]: prev[dropId]?.filter((c: any) => c.id !== newComment.id) || []
       }));
     } else {
       console.log('Comment posted successfully:', { userName, userImage, text });
@@ -535,13 +535,19 @@ export default function TikTokStyleDrops() {
       {/* MOBILE TOP NAV - Only visible on mobile/tablet */}
       <nav className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg border-b border-white/10">
         <div className="px-4 h-14 flex items-center justify-between">
-          <Image 
-            src="/logo.svg" 
-            alt="Logo" 
-            width={35} 
-            height={15}
-            className="h-4 w-auto"
-          />
+          <Link href="/marketplace">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer" style={{
+              backgroundImage: 'url(/logo2.svg)',
+              backgroundSize: '26px 26px',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'left center',
+              paddingLeft: '28px'
+            }}>
+              <h1 className="text-sm font-black bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">
+                Drops
+              </h1>
+            </div>
+          </Link>
           <div className="flex items-center gap-3">
             <Link href="/marketplace/upload">
               <Upload className="w-5 h-5 text-white" />
@@ -572,13 +578,19 @@ export default function TikTokStyleDrops() {
       {/* DESKTOP SIDEBAR - Only visible on desktop */}
       <aside className="hidden lg:block fixed left-0 top-0 bottom-0 w-64 bg-black border-r border-white/10 z-40 overflow-y-auto">
         <div className="p-6">
-          <Image 
-            src="/logo.svg" 
-            alt="Logo" 
-            width={100} 
-            height={40}
-            className="h-10 w-auto mb-8"
-          />
+          <Link href="/marketplace">
+            <div className="flex items-center gap-3 mb-8 px-4 py-2 rounded-lg cursor-pointer" style={{
+              backgroundImage: 'url(/logo2.svg)',
+              backgroundSize: '36px 36px',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'left center',
+              paddingLeft: '40px'
+            }}>
+              <h1 className="text-xl font-black bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">
+                Drops
+              </h1>
+            </div>
+          </Link>
 
           {/* User Profile */}
           {currentUser && (

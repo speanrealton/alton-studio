@@ -61,7 +61,7 @@ export default function CreatePost() {
         return;
       }
 
-      const userCircles = data?.map(m => m.circles).filter(Boolean) as Circle[] || [];
+      const userCircles = (data || []).flatMap((m: any) => m.circles || []).filter(Boolean) as Circle[] || [];
       setCircles(userCircles);
 
       // If circle slug provided, select that circle

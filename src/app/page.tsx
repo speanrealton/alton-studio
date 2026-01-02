@@ -68,12 +68,12 @@ function RobotWithCards() {
       <motion.div
         animate={{ y: [0, -30, 0] }}
         transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-        className="absolute left-1/2 -translate-x-1/2 z-20"
+        className="absolute left-2/3 -translate-x-1/2 z-20"
       >
         <img
           src="/robot3.png"
           alt="Robot"
-          className="w-96 h-[28rem] md:w-[28rem] md:h-[32rem] object-contain drop-shadow-2xl"
+          className="w-72 h-[22rem] md:w-[22rem] md:h-[26rem] object-contain drop-shadow-2xl"
           style={{
             filter: 'drop-shadow(0 0 40px rgba(100, 200, 255, 0.6)) drop-shadow(0 0 20px rgba(138, 43, 226, 0.4))'
           }}
@@ -140,13 +140,6 @@ export default function Home() {
       const { data: { session } } = await supabase.auth.getSession();
       setCurrentUser(session?.user ?? null);
       
-      // Show modal after a short delay if not logged in
-      if (!session) {
-        setTimeout(() => {
-          setShowAuthModal(true);
-        }, 3000); // Show modal after 3 seconds
-      }
-      
       setIsCheckingAuth(false);
     };
 
@@ -183,7 +176,7 @@ export default function Home() {
   // Auto-switch mockups every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentMockup(prev => prev === 'card' ? 'apparel' : 'card');
+      setCurrentMockup(prev => prev === 'squeegee' ? 'camera' : 'squeegee');
     }, 5000);
     
     return () => clearInterval(interval);
@@ -464,7 +457,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center relative z-10">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-10 items-center relative z-10">
 
           <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="space-y-8">
             <div className="space-y-3">
@@ -476,7 +469,7 @@ export default function Home() {
               >
               </motion.div>
               
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <h1 className="text-3xl md:text-3xl lg:text-4xl font-black leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Design, Print &<br />
                 <RotatingText /><br />
                 <span className="text-transparent bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text">
@@ -512,12 +505,12 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Link href="/studio" onClick={(e) => handleCTAClick(e, '/studio')}>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 md:px-8 py-5 md:py-6 rounded-lg text-base font-semibold shadow-lg transition-all hover:shadow-purple-600/50 hover:scale-105" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-5 md:px-7 py-4 md:py-5 rounded-lg text-base font-semibold shadow-lg transition-all hover:shadow-purple-600/50 hover:scale-105" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Start Creating Now
                 </Button>
               </Link>
               <Link href="/home" onClick={(e) => handleCTAClick(e, '/home')}>
-                <Button className="bg-white/10 border border-purple-400/50 hover:bg-white/20 px-6 md:px-8 py-5 md:py-6 rounded-lg text-base font-semibold transition-all hover:border-purple-400" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <Button className="bg-white/10 border border-purple-400/50 hover:bg-white/20 px-5 md:px-7 py-4 md:py-5 rounded-lg text-base font-semibold transition-all hover:border-purple-400" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Learn More <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
@@ -525,26 +518,18 @@ export default function Home() {
           </motion.div>
 
           {/* Professional 3D Robot Assistant */}
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.3 }} className="relative h-96 md:h-full flex items-center justify-center" style={{ perspective: '1200px' }}>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.3 }} className="relative h-96 md:h-full flex items-center justify-center lg:col-span-2" style={{ perspective: '1200px' }}>
             {/* Growing color aura */}
             <motion.div
-              className="absolute inset-0 flex items-center justify-center"
-              animate={{
-                scale: [1, 1.3, 1],
+              className="absolute w-80 h-80 md:w-96 md:h-96 rounded-full blur-3xl opacity-40"
+              style={{
+                background: 'radial-gradient(circle, rgba(100, 200, 255, 0.8) 0%, rgba(138, 43, 226, 0.4) 50%, rgba(255, 20, 147, 0.2) 100%)',
               }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            >
-              <div
-                className="absolute w-80 h-80 md:w-96 md:h-96 rounded-full blur-3xl opacity-40"
-                style={{
-                  background: 'radial-gradient(circle, rgba(100, 200, 255, 0.8) 0%, rgba(138, 43, 226, 0.4) 50%, rgba(255, 20, 147, 0.2) 100%)',
-                }}
-                animate={{
-                  rotate: 360,
-                }}
-                transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-              />
-            </motion.div>
+              animate={{
+                rotate: 360,
+              }}
+              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+            />
 
             {/* Secondary color layer */}
             <motion.div
@@ -697,12 +682,12 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.08 }}
               animate={{
                 y: [0, -30, 0],
                 rotate: [0, 8, 0, -8, 0],
               }}
               transition={{
+                delay: index * 0.08,
                 duration: 3 + index * 0.5, // FASTER animation
                 repeat: Infinity,
                 ease: "easeInOut"
@@ -742,29 +727,6 @@ export default function Home() {
 
       {/* Features */}
       <section className="py-20 px-5">
-        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-6xl mx-auto text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Built for Creators Who Scale
-          </h2>
-        </motion.div>
-
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {[
-            { icon: Sparkles, title: "AI Design Studio", desc: "Generate professional designs in seconds" },
-            { icon: Palette, title: "Global Marketplace", desc: "Sell your templates to millions" },
-            { icon: Printer, title: "Print On Demand", desc: "Ship to 190+ countries automatically" },
-            { icon: Globe, title: "Creator Jobs", desc: "Get hired by top brands worldwide" },
-            { icon: Zap, title: "Instant Applications", desc: "One-click job submissions" },
-            { icon: Users, title: "Live Collaboration", desc: "Build together in real-time" },
-          ].map((f, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}
-              className="group bg-white/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6 hover:border-purple-500/60 transition-all hover:scale-105">
-              <f.icon className="w-10 h-10 text-purple-400 mb-4 group-hover:scale-110 transition" />
-              <h3 className="text-lg font-bold">{f.title}</h3>
-              <p className="text-sm text-gray-400 mt-2">{f.desc}</p>
-            </motion.div>
-          ))}
-        </div>
       </section>
 
       {/* Footer */}
@@ -777,7 +739,6 @@ export default function Home() {
             <Link href="/marketplace" className="hover:text-white transition">Alton Feed</Link>
             <Link href="/alton-designs" className="hover:text-white transition">Alton Designs</Link>
             <Link href="/print" className="hover:text-white transition">Print Network</Link>
-            <Link href="/jobs" className="hover:text-white transition">Creator Jobs</Link>
             <Link href="/community" className="hover:text-white transition">Community</Link>
             <Link href="/contributor/apply" className="hover:text-white transition font-bold text-purple-400">Upload Your Content</Link>
           </div>

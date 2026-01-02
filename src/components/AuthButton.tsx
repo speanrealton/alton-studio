@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { User, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { useLanguageContext } from '@/providers/LanguageProvider';
 
 export default function AuthButton() {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useLanguageContext();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -71,7 +73,7 @@ export default function AuthButton() {
               className="text-purple-400 hover:bg-purple-500/20"
             >
               <User className="w-5 h-5 mr-2" /> 
-              Account
+              {t('nav.settings')}
             </Button>
           </Link>
           <Button 
@@ -86,7 +88,7 @@ export default function AuthButton() {
       ) : (
         <Link href="/auth">
           <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-2 rounded-full font-semibold">
-            Sign In
+            {t('btn.signin') || 'Sign In'}
           </Button>
         </Link>
       )}

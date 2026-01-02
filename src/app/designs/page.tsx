@@ -31,15 +31,15 @@ const navItems = [
 ];
 
 export default function DesignsPage() {
-  const [designs, setDesigns] = useState([]);
+  const [designs, setDesigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('modified');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [designToDelete, setDesignToDelete] = useState(null);
+  const [designToDelete, setDesignToDelete] = useState<any | null>(null);
   const [activeMenu, setActiveMenu] = useState(null);
-  const [currentUser, setCurrentUser] = useState({ email: 'demo@alton.com' });
+  const [currentUser, setCurrentUser] = useState<{ email: string } | null>({ email: 'demo@alton.com' });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function DesignsPage() {
     }
   };
 
-  const deleteDesign = async (designName) => {
+  const deleteDesign = async (designName: string) => {
     try {
       const filtered = designs.filter(d => d.name !== designName);
       await storage.set('user-designs', JSON.stringify(filtered), false);
@@ -82,7 +82,7 @@ export default function DesignsPage() {
     }
   };
 
-  const duplicateDesign = async (design) => {
+  const duplicateDesign = async (design: any) => {
     try {
       const newDesign = {
         ...design,
@@ -100,7 +100,7 @@ export default function DesignsPage() {
     }
   };
 
-  const downloadDesign = (design) => {
+  const downloadDesign = (design: any) => {
     if (design.thumbnail) {
       const link = document.createElement('a');
       link.download = `${design.name.replace(/\s+/g, '-').toLowerCase()}.png`;
@@ -118,19 +118,19 @@ export default function DesignsPage() {
     .filter(design => design.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
       if (sortBy === 'modified') {
-        return new Date(b.lastModified) - new Date(a.lastModified);
+        return (new Date(b.lastModified || 0).getTime()) - (new Date(a.lastModified || 0).getTime());
       } else if (sortBy === 'created') {
-        return new Date(b.createdAt) - new Date(a.createdAt);
+        return (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime());
       } else if (sortBy === 'name') {
         return a.name.localeCompare(b.name);
       }
       return 0;
     });
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffMs = now - date;
+    const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -666,7 +666,6 @@ export default function DesignsPage() {
             <Link href="/marketplace" className="hover:text-white transition">Alton Feed</Link>
             <Link href="/alton-designs" className="hover:text-white transition">Alton Designs</Link>
             <Link href="/print" className="hover:text-white transition">Print Network</Link>
-            <Link href="/jobs" className="hover:text-white transition">Creator Jobs</Link>
             <Link href="/community" className="hover:text-white transition">Community</Link>
             <Link href="/contributor/apply" className="hover:text-white transition font-bold text-purple-400">Upload Your Content</Link>
           </div>
@@ -691,7 +690,7 @@ export default function DesignsPage() {
             </div>
             
             <p className="text-gray-400 mb-6">
-              Are you sure you want to delete <span className="text-white font-medium">"{designToDelete.name}"</span>? This action cannot be undone.
+              Are you sure you want to delete <span className="text-white font-medium">"{designToDelete?.name || ''}"</span>? This action cannot be undone.
             </p>
 
             <div className="flex gap-3">
